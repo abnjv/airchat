@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>دردشة صوتية - AirChat</title>
+  <style>
+    body {
+      font-family: 'Tahoma', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f5f5f5;
+      padding: 20px;
+      box-sizing: border-box;
+    }h1 {
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.buttons {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.status {
+  font-weight: bold;
+  color: green;
+}
+
+  </style>
+</head>
+<body>
+  <h1>🎤 دردشة صوتية - AirChat</h1>  <div class="buttons">
+    <button id="startBtn">تشغيل المايك</button>
+    <button id="stopBtn" disabled>إيقاف المايك</button>
+  </div>  <div class="status" id="status">الميكروفون غير مفعل</div>  <script src="/socket.io/socket.io.js"></script>  <script>
+    const socket = io();
+    let mediaRecorder;
+    let stream;
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const status = document.getElementById('status');
+
+    startBtn.onclick = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+
+        status.textContent = '🎧 جاري البث الصوتي...';
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            socket.emit('voice', e.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          stream.getTracks().forEach(track => track.stop());
+        };
+      } catch (err) {
+        alert('لا يمكن تشغيل المايكروفون');
+        console.error(err);
+      }
+    };
+
+    stopBtn.onclick = () => {
+      mediaRecorder.stop();
+      status.textContent = '⛔ ت 
+const PORT process.env. PORT || 5000;
+
+server.listen(PORT, () => {
+
+}); console.log)" بلع ل م عي وفري مل http://localhost:" + PORT);
