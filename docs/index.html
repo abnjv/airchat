@@ -4,27 +4,114 @@
   <meta charset="UTF-8" />
   <title>دردشة صوتية - AirChat</title>
 </head>
-<body style="background-color:#222;color:white;text-align:center;padding:20px;font-family:tahoma;">
+<body style="background:#222;color:white;text-align:center;padding:20px;font-family:tahoma;">
   <h1>مرحباً بك في AirChat</h1>
-  <p>تمكين الميكروفون لبدء الدردشة الصوتية</p>
-  <button onclick="startCall()">تشغيل الصوت</button>
+  <div id="login">
+    <input id="username" placeholder="اكتب اسمك" />
+    <button id="joinBtn">دخول الغرفة</button>
+  </div>
 
+  <div id="room" style="display:none;">
+    <p>🟢 متصل الآن</p>
+    <button id="leaveBtn">خروج</button>
+    <ul id="users"></ul>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
   <script>
+    const socket = io();
+    const peers = {};
     let localStream;
+    let username = "";
 
-    async function startCall() {
+    socket.on('connect', () => {
+      document.querySelector("p").textContent = "🟢 متصل الآن";
+    });
+
+    socket.on('update-users', (users) => {
+      const ul = document.getElementById('users');
+      ul.innerHTML = '';
+      users.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = user;
+        ul.appendChild(li);
+      });
+    });
+
+    document.getElementById('joinBtn').onclick = async () => {
+      const nameInput = document.getElementById('username').value.trim();
+      if (!nameInput) return alert("اكتب اسمك أولاً");
+      username = nameInput;
+
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('room').style.display = 'block';
+
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        alert("✅ تم السماح بالميكروفون");
-
-        const audio = document.createElement("audio");
-        audio.srcObject = localStream;
-        audio.autoplay = true;
-        document.body.appendChild(audio);
-
       } catch (err) {
         alert("❌ فشل تشغيل الميكروفون: " + err.message);
+        return;
       }
+
+      socket.emit('join', username);
+    };
+
+    document.getElementById('leaveBtn').onclick = () => {
+      socket.emit('leave', username);
+      location.reload();
+    };
+
+    socket.on('offer', async (id, description) => {
+      const peer = createPeer(id);
+      await peer.setRemoteDescription(description);
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+      socket.emit('answer', id, peer.localDescription);
+    });
+
+    socket.on('answer', (id, description) => {
+      peers[id].setRemoteDescription(description);
+    });
+
+    socket.on('ice-candidate', (id, candidate) => {
+      peers[id].addIceCandidate(new RTCIceCandidate(candidate));
+    });
+
+    socket.on('user-connected', async (id) => {
+      const peer = createPeer(id);
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+      socket.emit('offer', id, peer.localDescription);
+    });
+
+    socket.on('user-disconnected', (id) => {
+      if (peers[id]) {
+        peers[id].close();
+        delete peers[id];
+      }
+    });
+
+    function createPeer(id) {
+      const peer = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      peer.onicecandidate = event => {
+        if (event.candidate) {
+          socket.emit('ice-candidate', id, event.candidate);
+        }
+      };
+
+      peer.ontrack = event => {
+        const audio = document.createElement('audio');
+        audio.srcObject = event.streams[0];
+        audio.autoplay = true;
+        document.body.appendChild(audio);
+      };
+
+      localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+      peers[id] = peer;
+      return peer;
     }
   </script>
 </body>
