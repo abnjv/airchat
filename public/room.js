@@ -1,40 +1,46 @@
 const socket = io();
 
-// استخراج اسم المستخدم واسم الغرفة من عنوان الرابط
-const urlParams = new URLSearchParams(window.location.search);
-const username = urlParams.get("username") || "مجهول";
-const roomName = urlParams.get("room") || "عام";
+// 🧠 جلب بيانات المستخدم من LocalStorage
+const username = localStorage.getItem("username") || "مستخدم";
+const roomName = localStorage.getItem("room") || "عام";
+const isHost = true; // سيتم تعديله لاحقًا حسب أول مستخدم
 
-// عرض الاسم والغرفة
-document.getElementById("username").innerText = username;
-document.getElementById("roomName").innerText = roomName;
-
-// إرسال انضمام الغرفة للسيرفر
+// 💬 إرسال بيانات الدخول إلى السيرفر
 socket.emit("join-room", { username, room: roomName });
 
-// الخروج من الغرفة
-document.getElementById("leaveBtn").addEventListener("click", () => {
-  window.location.href = "/";
-});
-
-// إعداد الاتصال WebRTC
+// 🎤 تشغيل المايكروفون باستخدام WebRTC
 let localStream;
 
 navigator.mediaDevices.getUserMedia({ audio: true, video: false })
   .then(stream => {
     localStream = stream;
-    // إظهار رمز المايك مفتوح
-    document.querySelectorAll('.mic-slot').forEach(slot => {
-      slot.innerText = '🎙️'; // مبدئياً كل الدوائر رمز المايك
+
+    console.log("🎙️ تم تشغيل المايك بنجاح");
+
+    // ✅ تفعيل رمز المايك للدائرة الخاصة بالمستخدم
+    document.querySelectorAll('.mic-circle').forEach(circle => {
+      const nameEl = circle.querySelector(".mic-name");
+      if (nameEl && nameEl.textContent === username) {
+        circle.style.borderColor = "#0f0"; // أخضر = المايك شغال
+      }
     });
 
-    // إرسال الصوت للمستخدمين الآخرين
+    // 📡 مستعد لاستقبال اتصال مستخدمين آخرين
     socket.on("user-connected", userId => {
-      console.log(`مستخدم جديد متصل: ${userId}`);
-      // هنا مستقبلاً سنربطه بـ WebRTC PeerConnection
+      console.log("🟢 مستخدم متصل:", userId);
+      // لاحقًا نربط PeerConnection هنا
     });
+
   })
-  .catch(error => {
-    alert("لا يمكن الوصول للميكروفون.");
-    console.error(error);
+  .catch(err => {
+    console.error("❌ فشل تشغيل المايك:", err);
+    alert("⚠️ لم يتم تفعيل الميكروفون، يرجى السماح له.");
   });
+
+// 🚪 زر الخروج من الغرفة
+const leaveBtn = document.getElementById("leaveBtn");
+if (leaveBtn) {
+  leaveBtn.addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
+}
