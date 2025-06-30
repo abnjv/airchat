@@ -28,13 +28,17 @@ document.getElementById('leaveBtn').onclick = () => {
   location.reload();
 };
 
-// تحديث قائمة المستخدمين مع الصورة
+// ✅ تحديث قائمة المستخدمين مع الصورة
 socket.on('update-users', users => {
   const ul = document.getElementById('users');
   ul.innerHTML = '';
   users.forEach(user => {
     const li = document.createElement('li');
-    li.innerHTML = `<img src="avatar.jpg" width="32" height="32" style="border-radius:50%;vertical-align:middle;margin-right:8px;"> ${user}`;
+    li.innerHTML = `
+      <img src="avatar.jpg" width="32" height="32" 
+        style="border-radius:50%; vertical-align:middle; margin-left:10px;">
+      <span>${user}</span>
+    `;
     ul.appendChild(li);
   });
 });
