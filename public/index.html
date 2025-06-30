@@ -2,10 +2,70 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>دردشة صوتية - AirChat</title>
-  <link rel="stylesheet" href="style.css">
+  <title>🎤 دردشة صوتية - AirChat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background: linear-gradient(to bottom, #1b1b2f, #162447);
+      font-family: 'Tajawal', sans-serif;
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .login-container {
+      background-color: #202040;
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .avatar-preview img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid #00cc99;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      display: block;
+      width: 90%;
+      max-width: 300px;
+      margin: 10px auto;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    input {
+      background: #eeeeee;
+      color: #222;
+    }
+
+    button {
+      background-color: #00aaff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0088cc;
+    }
+  </style>
 </head>
 <body>
+
   <div class="login-container">
     <h1>🎤 دردشة صوتية - <b>AirChat</b></h1>
     
@@ -13,7 +73,7 @@
       <img src="avatar.jpg" alt="صورة المستخدم" />
     </div>
 
-    <input type="text" id="usernameInput" placeholder="👤 اكتب اسمك للدخول" />
+    <input type="text" id="usernameInput" placeholder="👤 اكتب اسمك" />
     <input type="text" id="roomInput" placeholder="📛 اسم الغرفة" />
     <input type="password" id="roomPass" placeholder="🔒 كلمة مرور الغرفة (اختياري)" />
 
@@ -22,18 +82,18 @@
 
   <script>
     function enterRoom() {
-      const username = document.getElementById('usernameInput').value;
-      const room = document.getElementById('roomInput').value;
+      const username = document.getElementById('usernameInput').value.trim();
+      const room = document.getElementById('roomInput').value.trim();
       const pass = document.getElementById('roomPass').value;
 
       if (!username || !room) {
-        alert("يرجى إدخال اسمك واسم الغرفة");
+        alert("يرجى إدخال اسمك واسم الغرفة أولاً");
         return;
       }
 
       localStorage.setItem("username", username);
       localStorage.setItem("room", room);
-      localStorage.setItem("roomPass", pass); // نستخدمه لاحقًا
+      localStorage.setItem("roomPass", pass);
       window.location.href = "room.html";
     }
   </script>
