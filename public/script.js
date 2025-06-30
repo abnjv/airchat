@@ -3,7 +3,6 @@ let localStream;
 let peers = {};
 let username = '';
 
-// عند الضغط على زر دخول الغرفة
 document.getElementById('joinBtn').onclick = async () => {
   const nameInput = document.getElementById('username').value.trim();
   if (!nameInput) return alert('يرجى كتابة اسمك أولاً');
@@ -22,28 +21,28 @@ document.getElementById('joinBtn').onclick = async () => {
   socket.emit('join', username);
 };
 
-// عند الضغط على زر الخروج
 document.getElementById('leaveBtn').onclick = () => {
   socket.emit('leave', username);
   location.reload();
 };
 
-// ✅ تحديث قائمة المستخدمين مع الصورة
+// تحديث المستخدمين في شكل دوائر
 socket.on('update-users', users => {
-  const ul = document.getElementById('users');
-  ul.innerHTML = '';
+  const container = document.getElementById('users');
+  container.innerHTML = '';
+
   users.forEach(user => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <img src="avatar.jpg" width="32" height="32" 
-        style="border-radius:50%; vertical-align:middle; margin-left:10px;">
-      <span>${user}</span>
+    const mic = document.createElement('div');
+    mic.className = 'mic-circle';
+    mic.innerHTML = `
+      <img src="avatar.jpg" width="48" height="48" style="border-radius:50%;">
+      <div class="username">${user}</div>
     `;
-    ul.appendChild(li);
+    container.appendChild(mic);
   });
 });
 
-// استلام عرض
+// استقبال عرض
 socket.on('offer', async (id, description) => {
   const pc = createPeer(id);
   await pc.setRemoteDescription(description);
@@ -52,17 +51,17 @@ socket.on('offer', async (id, description) => {
   socket.emit('answer', id, pc.localDescription);
 });
 
-// استلام الجواب
+// استقبال جواب
 socket.on('answer', (id, description) => {
   peers[id]?.setRemoteDescription(description);
 });
 
-// استلام مرشح ICE
+// استقبال مرشح ICE
 socket.on('ice-candidate', (id, candidate) => {
   peers[id]?.addIceCandidate(new RTCIceCandidate(candidate));
 });
 
-// مستخدم جديد انضم
+// مستخدم جديد
 socket.on('user-connected', async id => {
   const pc = createPeer(id);
   const offer = await pc.createOffer();
@@ -70,7 +69,7 @@ socket.on('user-connected', async id => {
   socket.emit('offer', id, pc.localDescription);
 });
 
-// مستخدم خرج
+// خروج مستخدم
 socket.on('user-disconnected', id => {
   if (peers[id]) {
     peers[id].close();
@@ -78,7 +77,7 @@ socket.on('user-disconnected', id => {
   }
 });
 
-// إنشاء الاتصال
+// إنشاء PeerConnection
 function createPeer(id) {
   const pc = new RTCPeerConnection({
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
