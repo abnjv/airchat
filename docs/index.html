@@ -15,14 +15,12 @@
     async function startCall() {
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        alert("تم السماح بالميكروفون ✅");
+        alert("✅ تم السماح بالميكروفون");
 
         const audio = document.createElement("audio");
         audio.srcObject = localStream;
         audio.autoplay = true;
         document.body.appendChild(audio);
-
-        // هنا نرسل الصوت للشخص الآخر باستخدام WebRTC (الخطوة القادمة)
 
       } catch (err) {
         alert("❌ فشل تشغيل الميكروفون: " + err.message);
