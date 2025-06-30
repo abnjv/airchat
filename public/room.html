@@ -77,28 +77,47 @@
       border-radius: 8px;
       padding: 2px 6px;
     }
+
+    .room-info {
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
 
   <h1>🎧 غرفة الصوت - AirChat</h1>
+  <div class="room-info" id="roomInfo">جارٍ التحميل...</div>
 
   <div class="room-container" id="mic-container">
-    <!-- الدوائر سيتم توليدها هنا -->
+    <!-- سيتم توليد الدوائر هنا -->
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const micContainer = document.getElementById('mic-container');
+    const roomInfo = document.getElementById('roomInfo');
     const socket = io();
 
+    const username = localStorage.getItem("username") || "مستخدم مجهول";
+    const roomName = localStorage.getItem("room") || "غرفتي";
+    const roomPass = localStorage.getItem("roomPass") || "";
+
+    // عرض اسم الغرفة
+    roomInfo.innerHTML = `📛 الغرفة: <b>${roomName}</b>`;
+
+    // إرسال معلومات الغرفة إلى السيرفر
+    socket.emit("joinRoom", { username, room: roomName, pass: roomPass });
+
+    // إنشاء المستخدم المضيف + فراغات
     const users = [
-      { name: 'نجم', id: 'xA1', isHost: true },
-      { name: 'صقر', id: 'bF9', isHost: false },
-      { name: 'مرحبا', id: 'c3Z', isHost: false },
-      { name: 'أمل', id: 'z7Q', isHost: false },
-      { name: 'ضيف', id: 'g8Y', isHost: false },
-      { name: 'ضيف', id: 'm2R', isHost: false },
+      { name: username, id: socket.id.slice(0, 4), isHost: true },
+      { name: '...', id: '--', isHost: false },
+      { name: '...', id: '--', isHost: false },
+      { name: '...', id: '--', isHost: false },
+      { name: '...', id: '--', isHost: false },
+      { name: '...', id: '--', isHost: false },
     ];
 
     users.forEach(user => {
