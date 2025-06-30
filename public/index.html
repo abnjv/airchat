@@ -1,35 +1,41 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎤 دردشة صوتية - AirChat</title>
-  <script src="/socket.io/socket.io.js"></script>
-  <script defer src="script.js"></script>
+  <meta charset="UTF-8">
+  <title>دردشة صوتية - AirChat</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <h1>🎤 دردشة صوتية - <b>AirChat</b></h1>
-
-  <!-- واجهة الدخول -->
-  <div id="login">
-    <img id="avatar-preview" src="avatar.jpg" alt="صورة المستخدم">
-    <input type="text" id="username" placeholder="🧑‍💻 اكتب اسمك للدخول" />
-    <br />
-    <button id="joinBtn">✅ دخول الغرفة</button>
-  </div>
-
-  <!-- واجهة الغرفة -->
-  <div id="room">
-    <p id="status">🔊 تم الاتصال بالغرفة</p>
-    <button id="leaveBtn">🚪 خروج من الغرفة</button>
-
-    <div id="userList">
-      <strong>🎧 المستخدمون في الغرفة:</strong>
-      <div id="users" class="circle-container"></div>
+  <div class="login-container">
+    <h1>🎤 دردشة صوتية - <b>AirChat</b></h1>
+    
+    <div class="avatar-preview">
+      <img src="avatar.jpg" alt="صورة المستخدم" />
     </div>
+
+    <input type="text" id="usernameInput" placeholder="👤 اكتب اسمك للدخول" />
+    <input type="text" id="roomInput" placeholder="📛 اسم الغرفة" />
+    <input type="password" id="roomPass" placeholder="🔒 كلمة مرور الغرفة (اختياري)" />
+
+    <button onclick="enterRoom()">✅ دخول الغرفة</button>
   </div>
 
+  <script>
+    function enterRoom() {
+      const username = document.getElementById('usernameInput').value;
+      const room = document.getElementById('roomInput').value;
+      const pass = document.getElementById('roomPass').value;
+
+      if (!username || !room) {
+        alert("يرجى إدخال اسمك واسم الغرفة");
+        return;
+      }
+
+      localStorage.setItem("username", username);
+      localStorage.setItem("room", room);
+      localStorage.setItem("roomPass", pass); // نستخدمه لاحقًا
+      window.location.href = "room.html";
+    }
+  </script>
 </body>
 </html>
