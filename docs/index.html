@@ -1,23 +1,33 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>دردشة صوتية - AirChat</title>
-  <style>
-    body {
-      font-family: Tahoma, sans-serif;
-      text-align: center;
-      background-color: #464646;
-      padding: 40px;
-    }
-
-    h1 {
-      color: #4a90e2;
-    }
-  </style>
 </head>
-<body>
+<body style="background-color:#222;color:white;text-align:center;padding:20px;font-family:tahoma;">
   <h1>مرحباً بك في AirChat</h1>
-  <p>هذا الموقع يعمل باستخدام Node.js و YAML</p>
+  <p>تمكين الميكروفون لبدء الدردشة الصوتية</p>
+  <button onclick="startCall()">تشغيل الصوت</button>
+
+  <script>
+    let localStream;
+
+    async function startCall() {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        alert("تم السماح بالميكروفون ✅");
+
+        const audio = document.createElement("audio");
+        audio.srcObject = localStream;
+        audio.autoplay = true;
+        document.body.appendChild(audio);
+
+        // هنا نرسل الصوت للشخص الآخر باستخدام WebRTC (الخطوة القادمة)
+
+      } catch (err) {
+        alert("❌ فشل تشغيل الميكروفون: " + err.message);
+      }
+    }
+  </script>
 </body>
 </html>
