@@ -1,107 +1,88 @@
 const socket = io();
 let localStream;
-let peerConnections = {};
+let peers = {};
 let username = '';
 
 // عند الضغط على زر دخول الغرفة
-document.getElementById('joinBtn').onclick = () => {
+document.getElementById('joinBtn').onclick = async () => {
   const nameInput = document.getElementById('username').value.trim();
-  if (nameInput) {
-    username = nameInput;
-    socket.emit('join', username);
-    document.getElementById('login').style.display = 'none';
-    document.getElementById('room').style.display = 'block';
-  } else {
-    alert('يرجى كتابة اسمك أولاً');
+  if (!nameInput) return alert('يرجى كتابة اسمك أولاً');
+  username = nameInput;
+
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('room').style.display = 'block';
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    alert('🚫 الرجاء السماح بالوصول إلى الميكروفون');
+    return;
   }
+
+  socket.emit('join', username);
 };
 
-// زر الخروج
+// عند الضغط على زر الخروج
 document.getElementById('leaveBtn').onclick = () => {
   socket.emit('leave', username);
   location.reload();
 };
 
-// تحديث قائمة المستخدمين
+// تحديث قائمة المستخدمين مع الصورة
 socket.on('update-users', users => {
   const ul = document.getElementById('users');
   ul.innerHTML = '';
   users.forEach(user => {
     const li = document.createElement('li');
-    li.textContent = user;
+    li.innerHTML = `<img src="avatar.jpg" width="32" height="32" style="border-radius:50%;vertical-align:middle;margin-right:8px;"> ${user}`;
     ul.appendChild(li);
   });
 });
 
-// طلب الميكروفون
-navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-  .then(stream => {
-    localStream = stream;
-  })
-  .catch(err => {
-    alert('🚫 الرجاء السماح بالوصول إلى الميكروفون');
-    console.error(err);
-  });
-
-// استلام عرض من مستخدم جديد
-socket.on('offer', (id, description) => {
-  const pc = createPeerConnection(id);
-  peerConnections[id] = pc;
-
-  pc.setRemoteDescription(description).then(() => {
-    return pc.createAnswer();
-  }).then(answer => {
-    return pc.setLocalDescription(answer);
-  }).then(() => {
-    socket.emit('answer', id, pc.localDescription);
-  });
+// استلام عرض
+socket.on('offer', async (id, description) => {
+  const pc = createPeer(id);
+  await pc.setRemoteDescription(description);
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  socket.emit('answer', id, pc.localDescription);
 });
 
-// استلام الجواب من الطرف الآخر
+// استلام الجواب
 socket.on('answer', (id, description) => {
-  if (peerConnections[id]) {
-    peerConnections[id].setRemoteDescription(description);
-  }
+  peers[id]?.setRemoteDescription(description);
 });
 
 // استلام مرشح ICE
-socket.on('candidate', (id, candidate) => {
-  if (peerConnections[id]) {
-    peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
-  }
+socket.on('ice-candidate', (id, candidate) => {
+  peers[id]?.addIceCandidate(new RTCIceCandidate(candidate));
 });
 
 // مستخدم جديد انضم
-socket.on('new-user', id => {
-  const pc = createPeerConnection(id);
-  peerConnections[id] = pc;
-
-  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
-  pc.createOffer().then(offer => {
-    return pc.setLocalDescription(offer);
-  }).then(() => {
-    socket.emit('offer', id, pc.localDescription);
-  });
+socket.on('user-connected', async id => {
+  const pc = createPeer(id);
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  socket.emit('offer', id, pc.localDescription);
 });
 
 // مستخدم خرج
-socket.on('user-left', id => {
-  if (peerConnections[id]) {
-    peerConnections[id].close();
-    delete peerConnections[id];
+socket.on('user-disconnected', id => {
+  if (peers[id]) {
+    peers[id].close();
+    delete peers[id];
   }
 });
 
 // إنشاء الاتصال
-function createPeerConnection(id) {
+function createPeer(id) {
   const pc = new RTCPeerConnection({
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
   });
 
   pc.onicecandidate = event => {
     if (event.candidate) {
-      socket.emit('candidate', id, event.candidate);
+      socket.emit('ice-candidate', id, event.candidate);
     }
   };
 
@@ -112,5 +93,7 @@ function createPeerConnection(id) {
     document.body.appendChild(audio);
   };
 
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  peers[id] = pc;
   return pc;
 }
