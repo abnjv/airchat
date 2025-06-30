@@ -1,132 +1,122 @@
-/* 💡 تصميم عام */
+/* الخط العام */
 body {
-  background-color: #121212;
-  color: white;
-  font-family: 'Arial', sans-serif;
-  text-align: center;
   margin: 0;
   padding: 0;
+  font-family: 'Cairo', sans-serif;
   direction: rtl;
+  background: linear-gradient(135deg, #1d1f27, #3a3b5a);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 💬 واجهة تسجيل الدخول */
+/* واجهة الدخول */
 .login-container {
-  max-width: 400px;
-  margin: 80px auto;
-  background-color: #1e1e1e;
+  background: rgba(0, 0, 0, 0.5);
   padding: 30px;
   border-radius: 20px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
-}
-
-h1 {
-  font-size: 26px;
-  margin-bottom: 25px;
-  color: #ffffff;
-}
-
-.avatar-preview img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  margin-bottom: 20px;
-  border: 4px solid #60a5fa;
-}
-
-input {
-  display: block;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  text-align: center;
   width: 90%;
-  padding: 12px;
-  margin: 10px auto;
-  border: 1px solid #333;
-  border-radius: 12px;
-  font-size: 16px;
-  background-color: #2a2a2a;
-  color: white;
+  max-width: 400px;
 }
 
-button {
-  background-color: #3b82f6;
-  color: white;
+.login-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
   border: none;
-  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background-color: #5e60ce;
+  color: white;
   font-size: 18px;
-  border-radius: 12px;
   cursor: pointer;
   transition: 0.3s;
-  margin-top: 10px;
 }
 
-button:hover {
-  background-color: #2563eb;
+.login-container button:hover {
+  background-color: #4ea8de;
 }
 
-/* 🎤 تصميم غرفة الصوت */
+/* واجهة الغرفة */
 .room-container {
+  text-align: center;
+  width: 100%;
+  max-width: 800px;
+  padding: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+#roomTitle {
+  margin-bottom: 30px;
+  font-size: 28px;
+}
+
+/* تصميم الدوائر */
+.mic-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 25px;
-  padding: 20px;
   justify-items: center;
-  margin-top: 20px;
+  margin-bottom: 30px;
 }
 
-/* 🎧 دائرة المايك */
-.mic-circle {
+.mic-slot {
   width: 100px;
   height: 100px;
-  background-color: #1e1e1e;
-  border: 2px solid #ffc107;
+  background: #222;
   border-radius: 50%;
-  position: relative;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  font-size: 30px;
   cursor: pointer;
+  box-shadow: 0 0 10px #5e60ce;
+  transition: 0.3s;
 }
 
-/* 🖼️ صورة داخل الدائرة */
-.mic-circle img {
-  width: 80%;
-  height: 80%;
-  border-radius: 50%;
-  object-fit: cover;
+.mic-slot:hover {
+  background: #5e60ce;
+  box-shadow: 0 0 20px #5e60ce;
 }
 
-/* 🧑‍💻 اسم المستخدم تحت الدائرة */
-.username {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #ffc107;
-}
-
-/* ☰ قائمة المايك */
-.menu {
-  position: absolute;
-  bottom: -100px;
-  background-color: #1f1f1f;
-  border: 1px solid #333;
-  border-radius: 8px;
-  width: 130px;
-  display: none;
-  flex-direction: column;
-  z-index: 999;
-}
-
-.menu button {
-  background: none;
-  border: none;
+/* زر الخروج */
+.exit-btn {
+  background-color: #e63946;
   color: white;
-  padding: 10px;
-  font-size: 14px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
   cursor: pointer;
-  border-bottom: 1px solid #333;
 }
 
-.menu button:last-child {
-  border-bottom: none;
+.exit-btn:hover {
+  background-color: #c92a2a;
 }
 
-.menu button:hover {
-  background-color: #333;
+/* للأجهزة الصغيرة */
+@media (max-width: 600px) {
+  .mic-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mic-slot {
+    width: 80px;
+    height: 80px;
+    font-size: 24px;
+  }
 }
