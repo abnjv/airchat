@@ -1,32 +1,20 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>غرفة صوتية - AirChat</title>
+  <title>🎤 غرفة صوتية - AirChat</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="room-page">
+<body>
 
-  <header>
-    <h2>🎤 غرفة <span id="roomName"></span></h2>
-    <p>مرحبًا <span id="username"></span> 👋</p>
-  </header>
+  <h1>🎧 مرحبًا بك في غرفة الدردشة الصوتية</h1>
 
-  <section class="mic-grid">
-    <div class="mic-slot" id="mic1">🎙️</div>
-    <div class="mic-slot" id="mic2">🎙️</div>
-    <div class="mic-slot" id="mic3">🎙️</div>
-    <div class="mic-slot" id="mic4">🎙️</div>
-    <div class="mic-slot" id="mic5">🎙️</div>
-    <div class="mic-slot" id="mic6">🎙️</div>
-  </section>
-
-  <div class="controls">
-    <button id="leaveBtn">🚪 خروج</button>
+  <div class="room-container">
+    <!-- سيتم توليد دوائر المستخدمين هنا ديناميكياً من JavaScript -->
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="room.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
