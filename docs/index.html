@@ -2,22 +2,56 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>دردشة صوتية - AirChat</title>
+  <title>🎤 دردشة صوتية - AirChat</title>
   <style>
     body {
       font-family: Tahoma, sans-serif;
       text-align: center;
-      background-color: #464646;
+      background-color: #f0f0f0;
       padding: 40px;
     }
 
-    h1 {
-      color: #4a90e2;
+    input, button {
+      padding: 10px;
+      font-size: 18px;
+      margin: 10px;
+      border-radius: 10px;
+      border: none;
+    }
+
+    #userList {
+      margin-top: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 15px;
+      display: inline-block;
+    }
+
+    #leaveBtn {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    #joinBtn {
+      background-color: #27ae60;
+      color: white;
     }
   </style>
 </head>
 <body>
-  <h1>مرحباً بك في AirChat</h1>
-  <p>هذا الموقع يعمل باستخدام Node.js و YAML</p>
+  <h1>🎤 دردشة صوتية - <strong>AirChat</strong></h1>
+  <div id="login">
+    <input type="text" id="username" placeholder="اكتب اسمك للدخول">
+    <button id="joinBtn">✅ دخول الغرفة</button>
+  </div>
+
+  <div id="chatRoom" style="display:none;">
+    <p>🟢 متصل الآن</p>
+    <button id="leaveBtn">🚪 خروج من الغرفة</button>
+    <div id="userList"><strong>👥 المستخدمون في الغرفة:</strong></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
