@@ -7,30 +7,49 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const users = new Set();
-
 app.use(express.static(path.join(__dirname, 'public')));
 
+let rooms = {}; // كل غرفة تحتوي على المستخدمين
+
 io.on('connection', socket => {
-  let currentUser = '';
+  console.log('🟢 مستخدم متصل:', socket.id);
 
   socket.on('join', username => {
-    currentUser = username;
-    users.add(username);
-    io.emit('update-users', Array.from(users));
-    socket.broadcast.emit('user-connected', socket.id);
+    const roomId = username; // كل اسم مستخدم = غرفة خاصة
+    socket.join(roomId);
+    socket.username = username;
+    socket.roomId = roomId;
+
+    if (!rooms[roomId]) rooms[roomId] = [];
+    rooms[roomId].push(username);
+
+    console.log(`✅ ${username} انضم للغرفة ${roomId}`);
+    io.to(roomId).emit('update-users', rooms[roomId]);
+
+    // إعلام الآخرين لبدء الاتصال
+    socket.to(roomId).emit('user-connected', socket.id);
   });
 
-  socket.on('leave', () => {
-    users.delete(currentUser);
-    io.emit('update-users', Array.from(users));
-    socket.broadcast.emit('user-disconnected', socket.id);
+  socket.on('leave', username => {
+    const roomId = socket.roomId;
+    if (roomId && rooms[roomId]) {
+      rooms[roomId] = rooms[roomId].filter(user => user !== username);
+      socket.leave(roomId);
+      io.to(roomId).emit('update-users', rooms[roomId]);
+      socket.to(roomId).emit('user-disconnected', socket.id);
+      console.log(`🚪 ${username} غادر الغرفة ${roomId}`);
+    }
   });
 
   socket.on('disconnect', () => {
-    users.delete(currentUser);
-    io.emit('update-users', Array.from(users));
-    socket.broadcast.emit('user-disconnected', socket.id);
+    const roomId = socket.roomId;
+    const username = socket.username;
+    if (roomId && rooms[roomId]) {
+      rooms[roomId] = rooms[roomId].filter(user => user !== username);
+      io.to(roomId).emit('update-users', rooms[roomId]);
+      socket.to(roomId).emit('user-disconnected', socket.id);
+      console.log(`🔴 ${username} فصل الاتصال من الغرفة ${roomId}`);
+    }
   });
 
   socket.on('offer', (id, description) => {
