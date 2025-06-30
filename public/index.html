@@ -5,42 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎤 دردشة صوتية - AirChat</title>
   <script src="/socket.io/socket.io.js"></script>
+  <script defer src="script.js"></script>
   <style>
     body {
       font-family: Tahoma, sans-serif;
       text-align: center;
-      background-color: #f5f5f5;
+      background-color: #f2f2f2;
       padding: 30px;
     }
+
     input, button {
       font-size: 18px;
       padding: 10px;
       margin: 10px;
       border-radius: 8px;
     }
+
     button {
-      background-color: #2ecc71;
+      background-color: #3498db;
       color: white;
       border: none;
       cursor: pointer;
     }
+
     #room {
       display: none;
     }
+
     #userList {
-      background-color: #fff;
-      margin: auto;
+      background-color: white;
       padding: 10px;
       border-radius: 10px;
-      width: fit-content;
+      margin-top: 20px;
+      display: inline-block;
+      text-align: right;
     }
+
     #userList ul {
       list-style: none;
       padding: 0;
+      margin: 0;
     }
+
     #userList li {
-      padding: 5px;
+      padding: 8px;
+      display: flex;
+      align-items: center;
       border-bottom: 1px solid #eee;
+    }
+
+    #userList img {
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      margin-left: 10px;
+    }
+
+    #avatar-preview {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 2px solid #2ecc71;
+      margin: 10px auto;
+      display: block;
     }
   </style>
 </head>
@@ -50,7 +77,8 @@
 
   <!-- واجهة الدخول -->
   <div id="login">
-    <input type="text" id="username" placeholder="اكتب اسمك للدخول" />
+    <img id="avatar-preview" src="avatar.jpg" alt="صورة المستخدم">
+    <input type="text" id="username" placeholder="🧑‍💻 اكتب اسمك للدخول" />
     <br />
     <button id="joinBtn">✅ دخول الغرفة</button>
   </div>
@@ -65,111 +93,6 @@
       <ul id="users"></ul>
     </div>
   </div>
-
-  <script>
-    const socket = io();
-    let username = '';
-    let localStream;
-    const peers = {};
-
-    // عند الاتصال بالسيرفر
-    socket.on('connect', () => {
-      document.getElementById('status').textContent = '🟢 متصل الآن';
-    });
-
-    // تحديث قائمة المستخدمين
-    socket.on('update-users', (users) => {
-      const ul = document.getElementById('users');
-      ul.innerHTML = '';
-      users.forEach(user => {
-        const li = document.createElement('li');
-        li.textContent = user;
-        ul.appendChild(li);
-      });
-    });
-
-    // انضمام المستخدم
-    document.getElementById('joinBtn').onclick = async () => {
-      const nameInput = document.getElementById('username').value.trim();
-      if (nameInput) {
-        username = nameInput;
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('room').style.display = 'block';
-
-        // طلب الميكروفون
-        try {
-          localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        } catch (err) {
-          alert('فشل تشغيل الميكروفون: ' + err.message);
-          return;
-        }
-
-        socket.emit('join', username);
-      } else {
-        alert('يرجى كتابة اسمك أولاً');
-      }
-    };
-
-    // الخروج
-    document.getElementById('leaveBtn').onclick = () => {
-      socket.emit('leave', username);
-      location.reload();
-    };
-
-    // WebRTC – استقبال الاتصال
-    socket.on('offer', async (id, description) => {
-      const peer = createPeer(id);
-      await peer.setRemoteDescription(description);
-      const answer = await peer.createAnswer();
-      await peer.setLocalDescription(answer);
-      socket.emit('answer', id, peer.localDescription);
-    });
-
-    socket.on('answer', (id, description) => {
-      peers[id].setRemoteDescription(description);
-    });
-
-    socket.on('ice-candidate', (id, candidate) => {
-      peers[id].addIceCandidate(new RTCIceCandidate(candidate));
-    });
-
-    socket.on('user-connected', async (id) => {
-      const peer = createPeer(id);
-      const offer = await peer.createOffer();
-      await peer.setLocalDescription(offer);
-      socket.emit('offer', id, peer.localDescription);
-    });
-
-    socket.on('user-disconnected', (id) => {
-      if (peers[id]) {
-        peers[id].close();
-        delete peers[id];
-      }
-    });
-
-    function createPeer(id) {
-      const peer = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-      });
-
-      peer.onicecandidate = event => {
-        if (event.candidate) {
-          socket.emit('ice-candidate', id, event.candidate);
-        }
-      };
-
-      peer.ontrack = event => {
-        const audio = document.createElement('audio');
-        audio.srcObject = event.streams[0];
-        audio.autoplay = true;
-        document.body.appendChild(audio);
-      };
-
-      localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
-      peers[id] = peer;
-      return peer;
-    }
-  </script>
 
 </body>
 </html>
