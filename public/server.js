@@ -1,3 +1,6 @@
+# Create a file with the provided server.js content and save it as server_final.js
+
+server_js_code = """
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -74,3 +77,11 @@ io.on("connection", socket => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ الخادم يعمل على http://0.0.0.0:${PORT}`);
 });
+"""
+
+# Save the code to a file
+file_path = "/mnt/data/server_final.js"
+with open(file_path, "w") as f:
+    f.write(server_js_code)
+
+file_path
