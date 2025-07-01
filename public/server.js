@@ -70,6 +70,7 @@ io.on("connection", socket => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`✅ الخادم يعمل على http://localhost:${PORT}`);
+// ✅ التعديل هنا لتشغيل السيرفر على جميع الشبكات
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ الخادم يعمل على http://0.0.0.0:${PORT}`);
 });
