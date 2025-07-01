@@ -8,46 +8,52 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 5000;
-const rooms = {};
+const rooms = {}; // تخزين الغرف والمستخدمين
 
+// تقديم ملفات الواجهة
 app.use(express.static(path.join(__dirname, "public")));
-
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/public/index.html");
 });
 
+// الاتصال بالمستخدم
 io.on("connection", socket => {
-  console.log("🔌 مستخدم جديد:", socket.id);
+  console.log("🟢 متصل:", socket.id);
 
-  socket.on("join", ({ username, room }) => {
+  // عند انضمام المستخدم لغرفة
+  socket.on("join-room", ({ username, room }) => {
     socket.join(room);
     socket.username = username;
     socket.room = room;
 
+    // أول من يدخل يصبح مضيف الغرفة
     if (!rooms[room]) {
       rooms[room] = { host: socket.id, users: {} };
     }
 
     rooms[room].users[socket.id] = username;
 
-    // إرسال للمستخدمين الحاليين أن شخص جديد دخل
+    console.log(`🚪 ${username} انضم إلى الغرفة ${room}`);
+
+    // إرسال المستخدمين الحاليين للمستخدم الجديد
+    const otherUsers = Object.keys(rooms[room].users)
+      .filter(id => id !== socket.id);
+
+    socket.emit("all-users", otherUsers);
+
+    // إعلام الموجودين أن مستخدم جديد انضم
     socket.to(room).emit("user-connected", socket.id);
-
-    console.log(`👤 ${username} دخل الغرفة: ${room}`);
   });
 
-  socket.on("offer", ({ to, offer }) => {
-    io.to(to).emit("offer", { from: socket.id, offer });
+  // استقبال وإرسال الإشارات (signal) الخاصة بـ WebRTC
+  socket.on("signal", ({ targetId, signal }) => {
+    io.to(targetId).emit("signal", {
+      from: socket.id,
+      signal,
+    });
   });
 
-  socket.on("answer", ({ to, answer }) => {
-    io.to(to).emit("answer", { from: socket.id, answer });
-  });
-
-  socket.on("ice-candidate", ({ to, candidate }) => {
-    io.to(to).emit("ice-candidate", { from: socket.id, candidate });
-  });
-
+  // قطع الاتصال
   socket.on("disconnect", () => {
     const room = socket.room;
     if (room && rooms[room]) {
@@ -55,10 +61,10 @@ io.on("connection", socket => {
       socket.to(room).emit("user-disconnected", socket.id);
       console.log(`❌ ${socket.username} خرج من الغرفة ${room}`);
 
-      // إذا كان هو المضيف نحذف الغرفة
+      // حذف الغرفة إن كان المضيف هو من خرج
       if (rooms[room].host === socket.id) {
         delete rooms[room];
-        console.log(`🗑️ تم حذف الغرفة: ${room}`);
+        console.log(`🗑️ الغرفة ${room} تم حذفها`);
       }
     }
   });
