@@ -1,13 +1,30 @@
 {
+<<<<<<< airchat
   "name": "airchat",
   "version": "1.0.0",
   "description": "Voice chat application using Node.js, Socket.IO and WebRTC",
+=======
+  "name": "voice-chat-app",
+  "version": "1.0.0",
+  "description": "تطبيق دردشة صوتية فوري باستخدام Socket.io",
+>>>>>>> origin/main
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+<<<<<<< airchat
     "express": "^4.18.2",
     "socket.io": "^4.7.2"
   }
+=======
+    "chalk": "^4.1.2",
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+>>>>>>> airchat
 }
