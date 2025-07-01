@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -18,12 +18,17 @@
       margin-bottom: 20px;
     }
 
-    .room-container {
+    .room-info {
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: #aaa;
+    }
+
+    .mic-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 25px;
-      justify-items: center;
-      max-width: 800px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 20px;
+      max-width: 900px;
       margin: auto;
     }
 
@@ -31,8 +36,8 @@
       background: #333;
       border: 3px solid #3af;
       border-radius: 50%;
-      width: 120px;
-      height: 120px;
+      width: 110px;
+      height: 110px;
       position: relative;
       display: flex;
       flex-direction: column;
@@ -48,8 +53,8 @@
     }
 
     .mic-avatar {
-      width: 50px;
-      height: 50px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       object-fit: cover;
       margin-bottom: 5px;
@@ -57,12 +62,12 @@
     }
 
     .mic-name {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
     }
 
     .mic-id {
-      font-size: 11px;
+      font-size: 10px;
       color: #ccc;
     }
 
@@ -72,26 +77,26 @@
       right: -10px;
       background: gold;
       color: black;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
       border-radius: 8px;
       padding: 2px 6px;
     }
 
-    .room-info {
-      margin-bottom: 20px;
-      font-size: 16px;
-      color: #aaa;
+    @media (max-width: 600px) {
+      .mic-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
 </head>
 <body>
 
   <h1>🎧 غرفة الصوت - AirChat</h1>
-  <div class="room-info" id="roomInfo">جارٍ التحميل...</div>
+  <div class="room-info" id="roomInfo">جارٍ تحميل الغرفة...</div>
 
-  <div class="room-container" id="mic-container">
-    <!-- سيتم توليد الدوائر هنا -->
+  <div class="mic-grid" id="mic-container">
+    <!-- الدوائر ستولد تلقائيًا -->
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -107,20 +112,18 @@
     // عرض اسم الغرفة
     roomInfo.innerHTML = `📛 الغرفة: <b>${roomName}</b>`;
 
-    // إرسال معلومات الغرفة إلى السيرفر
+    // إرسال معلومات الانضمام
     socket.emit("joinRoom", { username, room: roomName, pass: roomPass });
 
-    // إنشاء المستخدم المضيف + فراغات
-    const users = [
-      { name: username, id: socket.id.slice(0, 4), isHost: true },
-      { name: '...', id: '--', isHost: false },
-      { name: '...', id: '--', isHost: false },
-      { name: '...', id: '--', isHost: false },
-      { name: '...', id: '--', isHost: false },
-      { name: '...', id: '--', isHost: false },
-    ];
+    // إنشاء 10 مايكات (المضيف + 9 أماكن)
+    const users = [];
 
-    users.forEach(user => {
+    users.push({ name: username, id: socket.id.slice(0, 4), isHost: true });
+    for (let i = 1; i < 10; i++) {
+      users.push({ name: "فارغ", id: "--", isHost: false });
+    }
+
+    users.forEach((user, index) => {
       const div = document.createElement('div');
       div.className = 'mic-circle';
 
