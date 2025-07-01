@@ -1,80 +1,98 @@
+
 const socket = io();
-
-// تسجيل الدخول
-const form = document.getElementById('join-form');
-const input = document.getElementById('username');
-
-if (form && input) {
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const username = input.value.trim();
-    if (username) {
-      socket.emit('join', username);
-      window.location.href = `/chat.html?name=${encodeURIComponent(username)}`;
-    }
-  });
-}
-
-// WebRTC الصوتي
 let localStream;
-let peerConnection;
-const config = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+let peers = {};
+let username = '';
+
+// عند الضغط على زر دخول الغرفة
+document.getElementById('joinBtn').onclick = async () => {
+  const nameInput = document.getElementById('username').value.trim();
+  if (!nameInput) return alert('يرجى كتابة اسمك أولاً');
+  username = nameInput;
+
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('room').style.display = 'block';
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    alert('🚫 الرجاء السماح بالوصول إلى الميكروفون');
+    return;
+  }
+
+  socket.emit('join', username);
 };
 
-// عند الدخول إلى صفحة الدردشة
-if (window.location.pathname.includes('chat.html')) {
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    localStream = stream;
+// عند الضغط على زر الخروج
+document.getElementById('leaveBtn').onclick = () => {
+  socket.emit('leave', username);
+  location.reload();
+};
 
-    socket.on('offer', async (id, description) => {
-      peerConnection = new RTCPeerConnection(config);
-      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-      await peerConnection.setRemoteDescription(description);
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
-      socket.emit('answer', id, peerConnection.localDescription);
-
-      peerConnection.ontrack = (event) => {
-        const audio = document.createElement('audio');
-        audio.autoplay = true;
-        audio.srcObject = event.streams[0];
-        document.body.appendChild(audio);
-      };
-
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit('candidate', id, event.candidate);
-        }
-      };
-    });
-
-    socket.on('candidate', (id, candidate) => {
-      peerConnection?.addIceCandidate(new RTCIceCandidate(candidate));
-    });
-
-    socket.on('connect', () => {
-      peerConnection = new RTCPeerConnection(config);
-      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit('candidate', socket.id, event.candidate);
-        }
-      };
-
-      peerConnection.ontrack = (event) => {
-        const audio = document.createElement('audio');
-        audio.autoplay = true;
-        audio.srcObject = event.streams[0];
-        document.body.appendChild(audio);
-      };
-
-      peerConnection.createOffer().then(offer => {
-        peerConnection.setLocalDescription(offer);
-        socket.emit('offer', socket.id, offer);
-      });
-    });
+// ✅ تحديث قائمة المستخدمين مع الصورة
+socket.on('update-users', users => {
+  const ul = document.getElementById('users');
+  ul.innerHTML = '';
+  users.forEach(user => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <img src="avatar.jpg" width="32" height="32" 
+        style="border-radius:50%; vertical-align:middle; margin-left:10px;">
+      <span>${user}</span>
+    `;
+    ul.appendChild(li);
   });
+});
+
+socket.on('offer', async (id, description) => {
+  const pc = createPeer(id);
+  await pc.setRemoteDescription(description);
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  socket.emit('answer', id, pc.localDescription);
+});
+
+socket.on('answer', (id, description) => {
+  peers[id]?.setRemoteDescription(description);
+});
+
+socket.on('ice-candidate', (id, candidate) => {
+  peers[id]?.addIceCandidate(new RTCIceCandidate(candidate));
+});
+
+socket.on('user-connected', async id => {
+  const pc = createPeer(id);
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  socket.emit('offer', id, pc.localDescription);
+});
+
+socket.on('user-disconnected', id => {
+  if (peers[id]) {
+    peers[id].close();
+    delete peers[id];
+  }
+});
+
+function createPeer(id) {
+  const pc = new RTCPeerConnection({
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+  });
+
+  pc.onicecandidate = event => {
+    if (event.candidate) {
+      socket.emit('ice-candidate', id, event.candidate);
+    }
+  };
+
+  pc.ontrack = event => {
+    const audio = document.createElement('audio');
+    audio.srcObject = event.streams[0];
+    audio.autoplay = true;
+    document.body.appendChild(audio);
+  };
+
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  peers[id] = pc;
+  return pc;
 }

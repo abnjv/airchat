@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -5,58 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎤 دردشة صوتية - AirChat</title>
   <script src="/socket.io/socket.io.js"></script>
-  <style>
-    body {
-      font-family: Tahoma, sans-serif;
-      text-align: center;
-      background-color: #f5f5f5;
-      padding: 30px;
-    }
-
-    input, button {
-      font-size: 18px;
-      padding: 10px;
-      margin: 10px;
-      border-radius: 8px;
-    }
-
-    button {
-      background-color: #2ecc71;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    #room {
-      display: none;
-    }
-
-    #userList {
-      background-color: #fff;
-      margin: auto;
-      padding: 10px;
-      border-radius: 10px;
-      width: fit-content;
-    }
-
-    #userList ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    #userList li {
-      padding: 5px;
-      border-bottom: 1px solid #eee;
-    }
-  </style>
+  <script defer src="script.js"></script>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <h1>🎤 دردشة صوتية - <b>AirChat</b></h1>
 
   <!-- واجهة الدخول -->
   <div id="login">
-    <input type="text" id="username" placeholder="اكتب اسمك للدخول" />
+    <img id="avatar-preview" src="avatar.jpg" alt="صورة المستخدم">
+    <input type="text" id="username" placeholder="🧑‍💻 اكتب اسمك للدخول" />
     <br />
     <button id="joinBtn">✅ دخول الغرفة</button>
   </div>
@@ -65,48 +24,10 @@
   <div id="room">
     <p id="status">🔌 جاري الاتصال...</p>
     <button id="leaveBtn">🚪 خروج من الغرفة</button>
-
     <div id="userList">
       <strong>👥 المستخدمون في الغرفة:</strong>
       <ul id="users"></ul>
     </div>
   </div>
-
-  <script>
-    const socket = io();
-    let username = '';
-
-    socket.on('connect', () => {
-      document.getElementById('status').textContent = '🟢 متصل الآن';
-    });
-
-    socket.on('update-users', (users) => {
-      const ul = document.getElementById('users');
-      ul.innerHTML = '';
-      users.forEach(user => {
-        const li = document.createElement('li');
-        li.textContent = user;
-        ul.appendChild(li);
-      });
-    });
-
-    document.getElementById('joinBtn').onclick = () => {
-      const nameInput = document.getElementById('username').value.trim();
-      if (nameInput) {
-        username = nameInput;
-        socket.emit('join', username);
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('room').style.display = 'block';
-      } else {
-        alert('يرجى كتابة اسمك أولاً');
-      }
-    };
-
-    document.getElementById('leaveBtn').onclick = () => {
-      socket.emit('leave', username);
-      location.reload(); // إعادة تحميل الصفحة
-    };
-  </script>
-
 </body>
 </html>
