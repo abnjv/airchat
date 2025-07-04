@@ -26,5 +26,5 @@ io.on('connection', (socket) => {
 
 // تشغيل السيرفر على المنفذ 5000
 server.listen(5000, () => {
-    console.log('✅ السيرفر يعمل على http://localhost:5000');
+    console.log('✅ السيرفر يعمل على https://airchat-8533.up.railway.app');
 });
