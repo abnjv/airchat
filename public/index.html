@@ -1,33 +1,223 @@
-
 <!DOCTYPE html>
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎤 دردشة صوتية - AirChat</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="/socket.io/socket.io.js"></script>
   <script defer src="script.js"></script>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background: linear-gradient(to bottom, #1b1b2f, #162447);
+      color: white;
+      font-family: 'Tajawal', sans-serif;
+      text-align: center;
+      padding: 30px 15px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .login-container {
+      background-color: #202040;
+      padding: 25px;
+      border-radius: 16px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    }
+
+    input, button {
+      display: block;
+      width: 90%;
+      max-width: 300px;
+      margin: 10px auto;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    input {
+      background: #eeeeee;
+      color: #222;
+    }
+
+    button {
+      background-color: #00aaff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0088cc;
+    }
+
+    .avatar-preview img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid #00cc99;
+      margin-bottom: 20px;
+    }
+
+    #room {
+      display: none;
+    }
+
+    #userList {
+      margin-top: 20px;
+      text-align: left;
+      max-width: 400px;
+      margin-inline: auto;
+    }
+
+    #users {
+      list-style: none;
+      padding: 0;
+    }
+
+    #users li {
+      background: #303050;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 <body>
   <h1>🎤 دردشة صوتية - <b>AirChat</b></h1>
 
   <!-- واجهة الدخول -->
-  <div id="login">
-    <img id="avatar-preview" src="avatar.jpg" alt="صورة المستخدم">
-    <input type="text" id="username" placeholder="🧑‍💻 اكتب اسمك للدخول" />
-    <br />
-    <button id="joinBtn">✅ دخول الغرفة</button>
+  <div id="login" class="login-container">
+    <div class="avatar-preview">
+      <img src="avatar.jpg" alt="صورة المستخدم" />
+    </div>
+    <input type="text" id="username" placeholder="👤 اكتب اسمك" />
+    <input type="text" id="roomInput" placeholder="📛 اسم الغرفة" />
+    <input type="password" id="roomPass" placeholder="🔒 كلمة مرور الغرفة (اختياري)" />
+    <button onclick="enterRoom()">✅ دخول الغرفة</button>
   </div>
 
   <!-- واجهة الغرفة -->
   <div id="room">
-    <p id="status">🔌 جاري الاتصال...</p>
-    <button id="leaveBtn">🚪 خروج من الغرفة</button>
+    <p id="status">🟢 متصل الآن</p>
+    <button id="leaveBtn">🚪 خروج</button>
     <div id="userList">
       <strong>👥 المستخدمون في الغرفة:</strong>
       <ul id="users"></ul>
     </div>
   </div>
+
+  <script>
+    const socket = io();
+    const peers = {};
+    let localStream;
+    let username = "";
+
+    function enterRoom() {
+      const name = document.getElementById("username").value.trim();
+      const room = document.getElementById("roomInput").value.trim();
+      const pass = document.getElementById("roomPass").value;
+
+      if (!name || !room) {
+        alert("يرجى إدخال اسمك واسم الغرفة أولاً");
+        return;
+      }
+
+      username = name;
+      localStorage.setItem("username", name);
+      localStorage.setItem("room", room);
+      localStorage.setItem("roomPass", pass);
+
+      document.getElementById("login").style.display = "none";
+      document.getElementById("room").style.display = "block";
+
+      try {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+          localStream = stream;
+          socket.emit("join", name);
+        });
+      } catch (err) {
+        alert("❌ فشل تشغيل الميكروفون: " + err.message);
+      }
+    }
+
+    document.getElementById("leaveBtn").onclick = () => {
+      socket.emit("leave", username);
+      location.reload();
+    };
+
+    socket.on("connect", () => {
+      document.getElementById("status").textContent = "🟢 متصل الآن";
+    });
+
+    socket.on("update-users", (users) => {
+      const ul = document.getElementById("users");
+      ul.innerHTML = "";
+      users.forEach(user => {
+        const li = document.createElement("li");
+        li.textContent = user;
+        ul.appendChild(li);
+      });
+    });
+
+    socket.on("offer", async (id, description) => {
+      const peer = createPeer(id);
+      await peer.setRemoteDescription(description);
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+      socket.emit("answer", id, peer.localDescription);
+    });
+
+    socket.on("answer", (id, description) => {
+      peers[id].setRemoteDescription(description);
+    });
+
+    socket.on("ice-candidate", (id, candidate) => {
+      peers[id].addIceCandidate(new RTCIceCandidate(candidate));
+    });
+
+    socket.on("user-connected", async (id) => {
+      const peer = createPeer(id);
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+      socket.emit("offer", id, peer.localDescription);
+    });
+
+    socket.on("user-disconnected", (id) => {
+      if (peers[id]) {
+        peers[id].close();
+        delete peers[id];
+      }
+    });
+
+    function createPeer(id) {
+      const peer = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+      });
+
+      peer.onicecandidate = event => {
+        if (event.candidate) {
+          socket.emit("ice-candidate", id, event.candidate);
+        }
+      };
+
+      peer.ontrack = event => {
+        const audio = document.createElement("audio");
+        audio.srcObject = event.streams[0];
+        audio.autoplay = true;
+        document.body.appendChild(audio);
+      };
+
+      localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+      peers[id] = peer;
+      return peer;
+    }
+  </script>
 </body>
 </html>
