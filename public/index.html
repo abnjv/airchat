@@ -1,3 +1,4 @@
+<!-- 🔥 تطوير نهائي لـ AirChat: واجهة دخول + واجهة الغرفة + تصميم المايكات -->
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -87,6 +88,40 @@
       margin-bottom: 8px;
       border-radius: 8px;
     }
+
+    /* ✅ تصميم المايكات */
+    .mic-container {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .mic-row {
+      display: flex;
+      gap: 25px;
+      justify-content: center;
+    }
+
+    .mic {
+      width: 70px;
+      height: 70px;
+      background-color: #00aaff;
+      border-radius: 50%;
+      border: 3px solid white;
+      position: relative;
+    }
+
+    .mic::after {
+      content: "🎤";
+      position: absolute;
+      font-size: 24px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -107,12 +142,34 @@
   <div id="room">
     <p id="status">🟢 متصل الآن</p>
     <button id="leaveBtn">🚪 خروج</button>
+
+    <!-- ✅ المايكات مرتبة -->
+    <div class="mic-container">
+      <div class="mic-row">
+        <div class="mic"></div>
+        <div class="mic"></div>
+      </div>
+      <div class="mic-row">
+        <div class="mic"></div>
+        <div class="mic"></div>
+        <div class="mic"></div>
+        <div class="mic"></div>
+      </div>
+      <div class="mic-row">
+        <div class="mic"></div>
+        <div class="mic"></div>
+        <div class="mic"></div>
+        <div class="mic"></div>
+      </div>
+    </div>
+
     <div id="userList">
       <strong>👥 المستخدمون في الغرفة:</strong>
       <ul id="users"></ul>
     </div>
   </div>
 
+  <!-- سكربت الاتصال -->
   <script>
     const socket = io();
     const peers = {};
