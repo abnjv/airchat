@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎤 غرفة صوتية - AirChat</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background: linear-gradient(to bottom, #1c1c2b, #2e2e47);
+      color: white;
+      font-family: 'Tajawal', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .room-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+      justify-items: center;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .mic-circle {
+      background: #333;
+      border: 3px solid #3af;
+      border-radius: 50%;
+      width: 120px;
+      height: 120px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .mic-circle:hover {
+      transform: scale(1.05);
+      border-color: #4fc;
+    }
+
+    .mic-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 5px;
+      border: 2px solid white;
+    }
+
+    .mic-name {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .mic-id {
+      font-size: 11px;
+      color: #ccc;
+    }
+
+    .mic-host {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: gold;
+      color: black;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 8px;
+      padding: 2px 6px;
+    }
+
+    .room-info {
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎧 غرفة الصوت - AirChat</h1>
+  <div class="room-info" id="roomInfo">جارٍ التحميل...</div>
+
+  <div class="room-container" id="mic-container">
+    <!-- سيتم توليد الدوائر هنا -->
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const micContainer = document.getElementById('mic-container');
+    const roomInfo = document.getElementById('roomInfo');
+    const socket = io();
+
+    const username = localStorage.getItem("username") || "مستخدم مجهول";
+    const roomName = localStorage.getItem("room") || "غرفتي";
+    const roomPass = localStorage.getItem("roomPass") || "";
+
+    // عرض اسم الغرفة
+    roomInfo.innerHTML = `📛 الغرفة: <b>${roomName}</b>`;
+
+    // إرسال معلومات الغرفة إلى السيرفر
+    socket.emit("joinRoom", { username, room: roomName, pass: roomPass });
+
+    // إنشاء المستخدم المضيف + فراغات
+    const users = [
+      { name: username, id: socket.id.slice(0, 4), isHost: true },
+      { name: '...', id: '--', isHost: false },
+      { name: '...', id: '--', isHost: false },
+      { name: '...', id: '--', isHost: false },
+      { name: '...', id: '--', isHost: false },
+      { name: '...', id: '--', isHost: false },
+    ];
+
+    users.forEach(user => {
+      const div = document.createElement('div');
+      div.className = 'mic-circle';
+
+      div.innerHTML = `
+        ${user.isHost ? `<div class="mic-host">مضيف</div>` : ''}
+        <img src="avatar.jpg" class="mic-avatar" />
+        <div class="mic-name">${user.name}</div>
+        <div class="mic-id">ID: ${user.id}</div>
+      `;
+
+      micContainer.appendChild(div);
+    });
+  </script>
+</body>
+</html>

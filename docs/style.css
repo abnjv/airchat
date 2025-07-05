@@ -1,0 +1,122 @@
+/* الخط العام */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Cairo', sans-serif;
+  direction: rtl;
+  background: linear-gradient(135deg, #1d1f27, #3a3b5a);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* واجهة الدخول */
+.login-container {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+}
+
+.login-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background-color: #5e60ce;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.login-container button:hover {
+  background-color: #4ea8de;
+}
+
+/* واجهة الغرفة */
+.room-container {
+  text-align: center;
+  width: 100%;
+  max-width: 800px;
+  padding: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+#roomTitle {
+  margin-bottom: 30px;
+  font-size: 28px;
+}
+
+/* تصميم الدوائر */
+.mic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  justify-items: center;
+  margin-bottom: 30px;
+}
+
+.mic-slot {
+  width: 100px;
+  height: 100px;
+  background: #222;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  cursor: pointer;
+  box-shadow: 0 0 10px #5e60ce;
+  transition: 0.3s;
+}
+
+.mic-slot:hover {
+  background: #5e60ce;
+  box-shadow: 0 0 20px #5e60ce;
+}
+
+/* زر الخروج */
+.exit-btn {
+  background-color: #e63946;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.exit-btn:hover {
+  background-color: #c92a2a;
+}
+
+/* للأجهزة الصغيرة */
+@media (max-width: 600px) {
+  .mic-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mic-slot {
+    width: 80px;
+    height: 80px;
+    font-size: 24px;
+  }
+}
