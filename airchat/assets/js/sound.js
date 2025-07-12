@@ -1,40 +1,72 @@
-// sound.js
-// هذا الملف يتعامل مع تشغيل المؤثرات الصوتية المختلفة.
+// A centralized function to play various sound effects
+function playSound(soundName) {
+    let audio;
+    switch (soundName) {
+        case 'new-message-sound':
+            audio = new Audio('assets/sounds/new-message.mp3');
+            break;
+        case 'mic-sound':
+            audio = new Audio('assets/sounds/mic-sound.mp3');
+            break;
+        case 'gift-sound':
+            audio = new Audio('assets/sounds/gift-sound.mp3');
+            break;
+        case 'welcome-sound':
+            audio = new Audio('assets/sounds/welcome.mp3');
+            break;
+        case 'top-user-join-sound': // For a system message when a top user joins
+            audio = new Audio('assets/sounds/top-user-join.mp3');
+            break;
+        case 'level-up-sound':
+            audio = new Audio('assets/sounds/level-up-sound.mp3');
+            break;
+        default:
+            console.warn('Sound not found:', soundName);
+            return;
+    }
+    audio.volume = 0.5; // Default volume for sound effects
+    audio.play().catch(e => console.log(`Error playing ${soundName}:`, e));
+}
+
+// Make playSound globally accessible (needed by chat.js, gift.js, user.js)
+window.playSound = playSound;
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Sound JavaScript loaded.');
+    const toggleMicBtn = document.getElementById('toggle-mic-btn');
+    const micStatusUsername = document.getElementById('mic-username');
+    const micStatusAvatar = document.getElementById('mic-avatar');
 
-    // Cache sound effects to avoid re-loading for each play
-    const soundCache = {};
+    let isMicOn = false; // Initial state
 
-    function getSound(filename) {
-        if (soundCache[filename]) {
-            return soundCache[filename].cloneNode(); // Clone to allow multiple concurrent plays
-        }
-        const audio = new Audio(`assets/sounds/${filename}`);
-        soundCache[filename] = audio;
-        return audio.cloneNode();
+    if (toggleMicBtn) {
+        toggleMicBtn.addEventListener('click', () => {
+            isMicOn = !isMicOn;
+            if (isMicOn) {
+                toggleMicBtn.classList.add('on');
+                toggleMicBtn.querySelector('i').classList.remove('icon-mic-off');
+                toggleMicBtn.querySelector('i').classList.add('icon-mic-on');
+                toggleMicBtn.querySelector('span').textContent = 'نزول المايك';
+                playSound('mic-sound'); // Play mic on sound
+                // Simulate current user taking the mic
+                const currentUser = getCurrentUser();
+                if (currentUser) {
+                    micStatusUsername.textContent = currentUser.username;
+                    micStatusAvatar.src = currentUser.avatar || 'assets/images/default-avatar.png';
+                    displaySystemMessage(`${currentUser.username} صعد المايك.`);
+                }
+            } else {
+                toggleMicBtn.classList.remove('on');
+                toggleMicBtn.querySelector('i').classList.remove('icon-mic-on');
+                toggleMicBtn.querySelector('i').classList.add('icon-mic-off');
+                toggleMicBtn.querySelector('span').textContent = 'صعود المايك';
+                micStatusUsername.textContent = 'لا أحد على المايك';
+                micStatusAvatar.src = 'assets/images/default-avatar.png';
+                // Simulate current user leaving the mic
+                const currentUser = getCurrentUser();
+                if (currentUser) {
+                    displaySystemMessage(`${currentUser.username} نزل المايك.`);
+                }
+            }
+        });
     }
-
-    /**
-     * Plays a specific sound effect.
-     * @param {string} soundName - The filename of the sound effect (e.g., 'new-message.mp3').
-     * @param {number} volume - Optional. Volume from 0.0 to 1.0. Defaults to 1.0.
-     */
-    window.playSound = (soundName, volume = 1.0) => {
-        try {
-            const sound = getSound(soundName);
-            sound.volume = volume;
-            sound.play().catch(error => {
-                console.warn(`Failed to play sound ${soundName}:`, error);
-                // This usually happens if autoplay is blocked, or sound file not found.
-            });
-        } catch (error) {
-            console.error(`Error playing sound ${soundName}:`, error);
-        }
-    };
-
-    // Example Usage:
-    // playSound('new-message.mp3');
-    // playSound('gift-sound.mp3', 0.8);
 });
