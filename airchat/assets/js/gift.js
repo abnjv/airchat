@@ -1,148 +1,181 @@
-// gift.js
-// هذا الملف يتعامل مع منطق نظام الهدايا.
-
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Gift JavaScript loaded.');
+    const giftBoxBtn = document.getElementById('gift-box-btn');
+    const giftModal = document.getElementById('gift-modal');
+    const closeModalBtn = giftModal ? giftModal.querySelector('.close-button') : null;
+    const giftsGrid = document.querySelector('.gifts-grid');
+    const confirmGiftSendBtn = document.getElementById('confirm-gift-send');
+    const userBalanceSpan = document.getElementById('user-balance');
+    const giftErrorMsg = document.getElementById('gift-error-msg');
+    const recentGiftsList = document.getElementById('recent-gifts');
+    let selectedGift = null;
 
-    const giftBoxBtn = getElement('#gift-box-btn');
-    const giftModal = getElement('#gift-modal');
-    const closeModalBtn = getElement('#gift-modal .close-button');
-    const giftsGrid = getElement('.gifts-grid');
-    const confirmGiftSendBtn = getElement('#confirm-gift-send');
-    const giftStatusMessage = getElement('#gift-status-message');
-
-    let selectedGift = null; // To store the currently selected gift
-
-    // Dummy gift data (replace with data from your backend)
-    const availableGifts = [
-        { id: 1, name: 'وردة', cost: 10, image: 'gift1.png' },
-        { id: 2, name: 'قلب', cost: 50, image: 'gift2.png' },
-        { id: 3, name: 'سيارة', cost: 200, image: 'gift3.png' },
-        { id: 4, name: 'قصر', cost: 1000, image: 'gift4.png' }
+    // Dummy gift data (in a real app, this would come from a backend)
+    const gifts = [
+        { id: '1', name: 'قلب', cost: 10, image: 'assets/images/gift1.png' },
+        { id: '2', name: 'وردة', cost: 25, image: 'assets/images/gift2.png' },
+        { id: '3', name: 'سيارة', cost: 100, image: 'assets/images/gift3.png' },
+        { id: '4', name: 'جوهرة', cost: 500, image: 'assets/images/gift4.png' }
     ];
 
-    // Function to render gifts in the modal
+    // Load recent gifts from localStorage
+    let recentGifts = JSON.parse(localStorage.getItem('recentGifts')) || [];
+
+    // Display gifts in the modal
     function renderGifts() {
-        if (giftsGrid) {
-            giftsGrid.innerHTML = ''; // Clear previous gifts
-            availableGifts.forEach(gift => {
-                const giftItem = document.createElement('div');
-                giftItem.classList.add('gift-item');
-                giftItem.dataset.giftId = gift.id;
-                giftItem.dataset.giftCost = gift.cost;
+        if (!giftsGrid) return;
+        giftsGrid.innerHTML = '';
+        gifts.forEach(gift => {
+            const giftItem = document.createElement('div');
+            giftItem.classList.add('gift-item');
+            giftItem.dataset.giftId = gift.id;
+            giftItem.innerHTML = `
+                <img src="${gift.image}" alt="${gift.name}">
+                <div class="gift-name">${gift.name}</div>
+                <div class="gift-cost">${gift.cost}</div>
+            `;
+            giftItem.addEventListener('click', () => selectGift(giftItem, gift));
+            giftsGrid.appendChild(giftItem);
+        });
+    }
 
-                giftItem.innerHTML = `
-                    <img src="assets/images/${gift.image}" alt="${gift.name}">
-                    <p>${gift.name} (${gift.cost})</p>
-                `;
-                giftsGrid.appendChild(giftItem);
+    function selectGift(element, gift) {
+        // Remove 'selected' class from previously selected gift
+        const previouslySelected = giftsGrid.querySelector('.gift-item.selected');
+        if (previouslySelected) {
+            previouslySelected.classList.remove('selected');
+        }
 
-                // Add click listener to select gift
-                giftItem.addEventListener('click', () => {
-                    // Remove selected class from previously selected gift
-                    if (selectedGift) {
-                        const prevSelected = getElement(`.gift-item[data-gift-id="${selectedGift.id}"]`);
-                        if (prevSelected) prevSelected.classList.remove('selected');
-                    }
-                    // Add selected class to current gift
-                    giftItem.classList.add('selected');
-                    selectedGift = gift;
-                });
-            });
+        // Add 'selected' class to the clicked gift
+        element.classList.add('selected');
+        selectedGift = gift;
+        confirmGiftSendBtn.disabled = false; // Enable confirm button
+        giftErrorMsg.textContent = ''; // Clear any previous error
+    }
+
+    // Update user balance display in the modal
+    function updateBalanceDisplay() {
+        const user = getCurrentUser();
+        if (userBalanceSpan && user) {
+            userBalanceSpan.textContent = user.coins;
         }
     }
 
-    // Open Gift Modal
-    if (giftBoxBtn) {
-        giftBoxBtn.addEventListener('click', () => {
-            renderGifts(); // Render gifts every time modal opens
-            giftModal.style.display = 'flex'; // Use flex to center
-            selectedGift = null; // Reset selected gift
-            giftStatusMessage.classList.add('hidden'); // Hide status message
+    // Render recent gifts in the sidebar
+    function renderRecentGifts() {
+        if (!recentGiftsList) return;
+        recentGiftsList.innerHTML = '';
+        // Display only the last 5 gifts
+        recentGifts.slice(-5).reverse().forEach(gift => {
+            const giftItem = document.createElement('li');
+            giftItem.classList.add('recent-gift-item');
+            giftItem.innerHTML = `
+                <img src="${gift.image}" alt="${gift.name}">
+                <span>${gift.sender} أرسل ${gift.name} إلى ${gift.receiver}</span>
+            `;
+            recentGiftsList.appendChild(giftItem);
         });
     }
 
-    // Close Gift Modal
-    if (closeModalBtn) {
+    if (giftBoxBtn && giftModal && closeModalBtn && confirmGiftSendBtn) {
+        giftBoxBtn.addEventListener('click', () => {
+            selectedGift = null; // Reset selected gift
+            confirmGiftSendBtn.disabled = true; // Disable button initially
+            if (giftsGrid) {
+                const previouslySelected = giftsGrid.querySelector('.gift-item.selected');
+                if (previouslySelected) {
+                    previouslySelected.classList.remove('selected');
+                }
+            }
+            updateBalanceDisplay();
+            giftErrorMsg.textContent = '';
+            giftModal.style.display = 'flex'; // Use flex to center
+            renderGifts();
+        });
+
         closeModalBtn.addEventListener('click', () => {
             giftModal.style.display = 'none';
         });
-    }
 
-    // Close modal if clicked outside of content
-    if (giftModal) {
         window.addEventListener('click', (event) => {
-            if (event.target == giftModal) {
+            if (event.target === giftModal) {
                 giftModal.style.display = 'none';
             }
         });
-    }
 
-    // Confirm Send Gift
-    if (confirmGiftSendBtn) {
         confirmGiftSendBtn.addEventListener('click', () => {
             if (!selectedGift) {
-                displayMessage('الرجاء اختيار هدية أولاً.', 'error', giftStatusMessage);
+                giftErrorMsg.textContent = 'الرجاء اختيار هدية أولاً.';
                 return;
             }
 
-            let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            let currentUser = getCurrentUser();
             if (!currentUser) {
-                displayMessage('يجب تسجيل الدخول لإرسال الهدايا.', 'error', giftStatusMessage);
+                alert('الرجاء تسجيل الدخول لإرسال الهدايا.');
+                window.location.href = 'login.html';
                 return;
             }
 
             if (currentUser.coins < selectedGift.cost) {
-                displayMessage('ليس لديك عملات كافية لإرسال هذه الهدية.', 'error', giftStatusMessage);
+                giftErrorMsg.textContent = 'رصيدك غير كافٍ لإرسال هذه الهدية.';
                 return;
             }
 
-            // Simulate sending gift (in a real app, this goes to server)
-            updateUserCoins(-selectedGift.cost); // Deduct coins from sender
-            updateUserXP(selectedGift.cost / 10); // Grant XP for sending gift (example)
+            // Simulate gift sending
+            currentUser.coins -= selectedGift.cost;
+            currentUser.giftsSent = (currentUser.giftsSent || 0) + 1;
+            addXP(selectedGift.cost); // Add XP based on gift cost
 
-            // Simulate gift being received by someone (e.g., a specific user or the room)
-            // For simplicity, let's just update total received gifts for demo purposes
-            updateTotalGiftsReceived(1); // Update count of received gifts (simulated for sender's view)
+            // Simulate receiver (for demonstration, assume sending to a random user or self)
+            const simulatedReceiver = "المستخدم X"; // In a real app, this would be a specific user
+            // For now, let's make the user send to themselves for demo purposes or a dummy
+            const receiverUsername = "نفسك"; // Or the current mic user, etc.
 
-            displayMessage(`تم إرسال ${selectedGift.name} بنجاح!`, 'success', giftStatusMessage);
-            playSound('gift-sound.mp3'); // Play gift sound
+            // Add to recent gifts log
+            const newRecentGift = {
+                id: selectedGift.id,
+                name: selectedGift.name,
+                image: selectedGift.image,
+                sender: currentUser.username,
+                receiver: receiverUsername,
+                timestamp: new Date().toISOString()
+            };
+            recentGifts.push(newRecentGift);
+            localStorage.setItem('recentGifts', JSON.stringify(recentGifts));
+            renderRecentGifts(); // Update sidebar
 
-            // Optional: close modal after successful send
+            updateCurrentUser(currentUser); // Update user data in localStorage and footer
+            updateBalanceDisplay(); // Update modal balance
+            giftErrorMsg.textContent = `تم إرسال ${selectedGift.name} بنجاح!`;
+            playSound('gift-sound'); // Play gift sound
+
+            // Simulate chat message for gift
+            displayGiftMessage(currentUser.username, selectedGift.name, selectedGift.image);
+
+            // Optional: Auto-close modal after a delay
             setTimeout(() => {
                 giftModal.style.display = 'none';
-            }, 1000);
-
-            // In a real application:
-            // socket.send(JSON.stringify({ type: 'sendGift', giftId: selectedGift.id, recipientId: 'someUserId' }));
+            }, 1500);
         });
     }
 
-    // === Gift Statistics ===
-    const totalGiftsSentElement = getElement('#total-gifts-sent');
-    const totalGiftsReceivedElement = getElement('#total-gifts-received');
+    // Initial render of recent gifts when room.html loads
+    renderRecentGifts();
 
-    // Retrieve initial counts from localStorage (simulate persistence)
-    let totalGiftsSent = parseInt(localStorage.getItem('totalGiftsSent') || '0');
-    let totalGiftsReceived = parseInt(localStorage.getItem('totalGiftsReceived') || '0');
+    // Function to display gift message in chat (called from confirmGiftSendBtn)
+    window.displayGiftMessage = function(senderUsername, giftName, giftImage) {
+        const chatArea = document.getElementById('chat-area');
+        if (!chatArea) return;
 
-    function updateGiftStatsUI() {
-        if (totalGiftsSentElement) totalGiftsSentElement.textContent = totalGiftsSent;
-        if (totalGiftsReceivedElement) totalGiftsReceivedElement.textContent = totalGiftsReceived;
-    }
-
-    // Functions to update counts (can be called from other modules/server events)
-    window.updateTotalGiftsSent = (amount) => {
-        totalGiftsSent += amount;
-        localStorage.setItem('totalGiftsSent', totalGiftsSent);
-        updateGiftStatsUI();
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-message', 'gift-message');
+        messageElement.innerHTML = `
+            <img src="${senderUsername === getCurrentUser().username ? getCurrentUser().avatar : 'assets/images/default-avatar.png'}" alt="Avatar" class="avatar">
+            <div class="message-content">
+                <p>🎁 ${senderUsername} أرسل ${giftName} 🎁</p>
+                <img src="${giftImage}" alt="${giftName}" class="gift-icon-in-chat">
+            </div>
+        `;
+        chatArea.prepend(messageElement);
+        chatArea.scrollTop = chatArea.scrollHeight;
     };
-
-    window.updateTotalGiftsReceived = (amount) => {
-        totalGiftsReceived += amount;
-        localStorage.setItem('totalGiftsReceived', totalGiftsReceived);
-        updateGiftStatsUI();
-    };
-
-    updateGiftStatsUI(); // Initial update of gift stats on load
 });
