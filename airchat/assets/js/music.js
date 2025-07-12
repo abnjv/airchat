@@ -1,57 +1,35 @@
-// music.js
-// هذا الملف يتعامل مع تشغيل موسيقى الخلفية.
-
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Music JavaScript loaded.');
-
-    // Create an Audio object for background music
     const bgMusic = new Audio('assets/sounds/bg-music.mp3');
-    bgMusic.loop = true; // Loop the music
-    bgMusic.volume = 0.3; // Set initial volume (0.0 to 1.0)
+    bgMusic.loop = true;
+    bgMusic.volume = 0.3; // Adjust background music volume
 
-    // Optional: Add a mute/unmute button or volume control in your HTML
-    // For now, let's assume it starts playing automatically or on user interaction.
-
-    // A common browser restriction: Audio must be initiated by a user gesture.
-    // So, we might need a "Play Music" button or start it after the first click on the page.
-
-    function playBackgroundMusic() {
-        // Check if music is already playing to prevent multiple plays
-        if (bgMusic.paused) {
-            bgMusic.play().then(() => {
-                console.log('Background music started playing.');
-            }).catch(error => {
-                console.warn('Failed to play background music (user interaction needed?):', error);
-                // Prompt user to click a button to enable music
-            });
-        }
-    }
-
-    function stopBackgroundMusic() {
-        bgMusic.pause();
-        bgMusic.currentTime = 0; // Reset to start
-        console.log('Background music stopped.');
-    }
-
+    // Play/Pause background music (optional, can add UI controls for it)
     function toggleBackgroundMusic() {
         if (bgMusic.paused) {
-            playBackgroundMusic();
+            bgMusic.play().catch(e => console.log("Failed to play background music:", e));
         } else {
-            stopBackgroundMusic();
+            bgMusic.pause();
         }
     }
 
-    // Attach to a global function for other modules or UI controls to use
-    window.playBgMusic = playBackgroundMusic;
-    window.stopBgMusic = stopBackgroundMusic;
-    window.toggleBgMusic = toggleBackgroundMusic;
+    // Autoplay music when user interacts with the page for the first time
+    // Many browsers block autoplay without user interaction.
+    // A common pattern is to start music after the first click/touch.
+    document.body.addEventListener('click', function _listener() {
+        if (window.location.pathname.includes('room.html')) {
+            toggleBackgroundMusic();
+        }
+        document.body.removeEventListener('click', _listener); // Remove listener after first click
+    });
 
-    // Example: Play music when user enters the room page (room.html)
-    // This will likely require an initial click to work in most browsers.
+    // Stop music when leaving the room page (e.g., navigating to rooms.html)
+    window.addEventListener('beforeunload', () => {
+        bgMusic.pause();
+    });
+
+    // Ensure music starts if user lands directly on room.html and interacts
     if (window.location.pathname.includes('room.html')) {
-        // Consider adding a button for "Play/Pause Music"
-        // For demonstration, try to play after a slight delay
-        // However, a user click is the most reliable way.
-        // setTimeout(playBackgroundMusic, 2000);
+        // Optional: Add a button to manually start/stop music
+        // For now, it relies on the initial click on the body
     }
 });
