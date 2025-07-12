@@ -10,6 +10,9 @@ const mongoose = require('mongoose'); // استيراد mongoose
 const User = require('./models/User');
 const Room = require('./models/Room');
 
+// استيراد مسارات الـ API (المصادقة)
+const authRoutes = require('./routes/authRoutes');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -37,10 +40,9 @@ app.get('/', (req, res) => {
     res.send('AirChat Backend is running!');
 });
 
-// تعريف مسارات الـ API (سنضيفها لاحقاً هنا)
-// مثال:
-// app.post('/api/users/register', (req, res) => { ... });
-// app.post('/api/users/login', (req, res) => { ... });
+// استخدام مسارات المصادقة تحت مسار /api/auth
+app.use('/api/auth', authRoutes);
+
 
 // بدء تشغيل سيرفر Socket.IO
 io.on('connection', (socket) => {
