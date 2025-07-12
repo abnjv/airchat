@@ -1,14 +1,833 @@
+/* General Body & Typography */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5; /* Light subtle background */
+    color: #333;
+    line-height: 1.6;
+    direction: rtl; /* Ensure RTL for Arabic text */
+    text-align: right; /* Align text to the right for RTL */
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
 
+/* Dark Mode - Keep existing but ensure consistency */
 body.dark-mode {
-  background-color: #121212;
-  color: #ffffff;
+    background-color: #1a1a1a; /* Darker background */
+    color: #e0e0e0; /* Lighter text for dark mode */
 }
 body.dark-mode button {
-  background-color: #1f1f1f !important;
-  color: #ffffff !important;
+    background-color: #333 !important; /* Darker buttons in dark mode */
+    color: #e0e0e0 !important;
+    border: 1px solid #555 !important;
 }
-body.dark-mode input, body.dark-mode textarea {
-  background-color: #2c2c2c !important;
-  color: #ffffff !important;
-  border: 1px solid #444 !important;
+body.dark-mode input,
+body.dark-mode textarea {
+    background-color: #2c2c2c !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #444 !important;
+}
+
+/* Main Room Layout */
+#mainRoom {
+    max-width: 1200px;
+    margin: 60px auto 100px auto; /* Adjust margin to account for fixed elements */
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+#mainRoom h2 {
+    color: #007bff;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.2em;
+    font-weight: 600;
+}
+
+/* Mic Layout */
+#mics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    margin-top: 30px;
+    background-color: #e6f7ff; /* Light blue background for mics area */
+    border-radius: 12px;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.mic {
+    background-color: #ffffff;
+    border: 2px solid #ddd;
+    border-radius: 15px;
+    padding: 20px 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    font-weight: 600;
+    color: #0056b3;
+}
+
+.mic:hover {
+    transform: translateY(-5px) scale(1.03);
+    border-color: #007bff;
+    box-shadow: 0 8px 20px rgba(0, 123, 255, 0.2);
+}
+
+.mic.active {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 5px rgba(40, 167, 69, 0.3), 0 0 20px rgba(40, 167, 69, 0.6) !important;
+    animation: mic-glow 1.5s infinite alternate; /* Keep existing glow but refine */
+}
+
+@keyframes mic-glow {
+    0% { box-shadow: 0 0 0 5px rgba(40, 167, 69, 0.2), 0 0 10px rgba(40, 167, 69, 0.4); }
+    100% { box-shadow: 0 0 0 8px rgba(40, 167, 69, 0.4), 0 0 25px rgba(40, 167, 69, 0.8); }
+}
+
+/* Chat Box */
+#chat-box {
+    margin-top: 40px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07);
+}
+
+#chat-box input[type="text"] {
+    width: calc(100% - 180px); /* Adjust width considering buttons */
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-inline-end: 10px; /* Space between input and button */
+    font-size: 1em;
+}
+
+#chat-box button {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+    font-size: 1em;
+}
+
+#chat-box button:first-of-type { /* Send button */
+    background-color: #007bff;
+    color: white;
+}
+#chat-box button:first-of-type:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+#chat-box button:last-of-type { /* Gift button */
+    background-color: #ff9800;
+    color: white;
+}
+#chat-box button:last-of-type:hover {
+    background-color: #e68900;
+    transform: translateY(-1px);
+}
+
+#messages {
+    max-height: 250px;
+    overflow-y: auto;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 15px;
+    list-style: none; /* Remove default list styling */
+    padding-right: 0; /* Adjust padding for RTL */
+}
+
+.chat-message {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    word-wrap: break-word; /* Ensure long words wrap */
+}
+.chat-message.bot {
+    background-color: #eef0f4;
+    border-right: 4px solid #3498db; /* Changed from left to right for RTL */
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 6px;
+    font-style: italic;
+    color: #555;
+}
+
+
+/* General Buttons - Overrides default button styles from room.html */
+/* (These were already defined in room.html but good to have a central place here too) */
+.button-group button,
+button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    font-size: 1.05em;
+}
+
+.button-group button:hover,
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Specific Button Colors for consistency */
+.btn-primary { background-color: #007bff; color: white; }
+.btn-primary:hover { background-color: #0056b3; }
+
+.btn-success { background-color: #28a745; color: white; }
+.btn-success:hover { background-color: #218838; }
+
+.btn-warning { background-color: #ffc107; color: black; }
+.btn-warning:hover { background-color: #e0a800; }
+
+.btn-danger { background-color: #dc3545; color: white; }
+.btn-danger:hover { background-color: #c82333; }
+
+.btn-info { background-color: #17a2b8; color: white; }
+.btn-info:hover { background-color: #138496; }
+
+.btn-dark { background-color: #343a40; color: white; }
+.btn-dark:hover { background-color: #23272b; }
+
+/* Popups & Overlays */
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    text-align: center;
+    min-width: 300px;
+}
+
+.popup p {
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    color: #555;
+}
+
+.popup button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.popup button:hover {
+    background-color: #0056b3;
+}
+
+/* Other fixed position elements - adjust as needed for new layout */
+#stayTimer,
+#online-counter,
+#clock,
+#userDisplay,
+#user-badge,
+.top-right-controls,
+.top-left-controls,
+.bottom-left-controls,
+.bottom-right-controls,
+.bottom-center-chat,
+#honorBoard,
+#topUsersPanel,
+#userCount,
+#xpCounter,
+#levelDisplay,
+#giftCounter,
+#user-join-log,
+#live-counter,
+#top-speakers,
+#moderatorList,
+#entryLog,
+#pinnedMessage,
+#achievements-box,
+#vote-bar,
+#toast,
+#welcome-popup,
+#welcomeBanner,
+#welcome-msg,
+#status-bar {
+    /* Existing position properties are mostly fine, just ensure Z-index is logical */
+    z-index: 999; /* Adjust z-index as necessary for layering */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Add subtle shadow to fixed elements */
+    background: rgba(255, 255, 255, 0.9); /* Slight transparency for overlays */
+    border-radius: 12px;
+    padding: 15px;
+    box-sizing: border-box; /* Include padding in element's total width and height */
+}
+
+/* Specific adjustments for list-like fixed elements */
+#moderatorList,
+#entryLog,
+#topUsersList,
+#honorBoard,
+#user-join-log,
+#top-speakers {
+    background: rgba(240, 240, 240, 0.95);
+    border: 1px solid #ccc;
+    font-size: 0.95em;
+    padding: 10px 15px;
+}
+
+/* Specific style for user input div */
+div[style*="background:#f1f1f1;padding:8px"] {
+    background: #f1f1f1;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 9999;
+    position: fixed; /* Ensure it stays fixed */
+    bottom: 60px; /* Position it */
+    left: 10px;
+}
+div[style*="background:#f1f1f1;padding:8px"] input {
+    flex-grow: 1; /* Allow input to take available space */
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+}
+div[style*="background:#f1f1f1;padding:8px"] button {
+    padding: 8px 15px;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+    font-weight: normal;
+}
+
+
+/* Media Queries for Responsiveness (Basic) */
+@media (max-width: 768px) {
+    #mainRoom {
+        margin: 20px auto 100px auto;
+        padding: 15px;
+    }
+
+    #mics {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 15px;
+    }
+
+    .mic {
+        padding: 15px 10px;
+        min-height: 80px;
+    }
+
+    #chat-box input[type="text"] {
+        width: calc(100% - 120px); /* Adjust for smaller buttons on mobile */
+        margin-inline-end: 5px;
+    }
+
+    #chat-box button {
+        padding: 10px 15px;
+        font-size: 0.9em;
+    }
+
+    /* Adjust fixed button groups for smaller screens */
+    .button-group {
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .top-right-controls,
+    .top-left-controls,
+    .bottom-left-controls,
+    .bottom-right-controls {
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .top-right-controls {
+        top: 10px;
+        right: 10px;
+    }
+    .top-left-controls {
+        top: 10px;
+        left: 10px;
+    }
+    .bottom-left-controls {
+        bottom: 10px;
+        left: 10px;
+    }
+    .bottom-right-controls {
+        bottom: 10px;
+        right: 10px;
+    }
+
+    /* Stack buttons vertically in fixed groups if too many */
+    .button-group {
+        flex-direction: column;
+    }
+    /* Hide some less critical elements on small screens to save space */
+    #honorBoard, #topUsersPanel, #user-join-log, #top-speakers, #moderatorList, #entryLog {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #mainRoom {
+        padding: 10px;
+        margin: 10px auto 80px auto;
+    }
+    #mics {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 10px;
+    }
+    .mic {
+        font-size: 0.9em;
+    }
+    #chat-box input[type="text"] {
+        width: calc(100% - 100px);
+    }
+    #chat-box button {
+        padding: 8px 12px;
+        font-size: 0.85em;
+    }
+    .popup {
+        width: 90%;
+        padding: 20px 15px;
+    }
+}
+
+/* Ensure no overlap for main content with fixed elements */
+body {
+    padding-top: 100px; /* Space for top fixed elements */
+    padding-bottom: 150px; /* Space for bottom fixed elements */
+}
+
+/* Adjustments for the specific user input box if it's not removed */
+div[style*="background:#f1f1f1"] {
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px); /* Adjust width for mobile view */
+    max-width: 400px; /* Max width on larger screens */
+    bottom: 10px; /* Bring it lower for mobile */
+}
+
+/* Specific elements positioning (some previously inline, now centralized) */
+#stayTimer {
+    position: initial; /* Reset fixed positioning as it's now in top-right-controls */
+    margin-bottom: 10px;
+}
+#online-counter {
+    position: initial; /* Reset fixed positioning */
+    margin-bottom: 10px;
+}
+#clock {
+    position: initial; /* Reset fixed positioning */
+}
+#userDisplay {
+    position: initial; /* Reset fixed positioning */
+}
+#user-badge {
+    position: initial; /* Reset fixed positioning */
+}
+#honorBoard {
+    position: fixed;
+    top: 10px;
+    right: calc(100% - 250px); /* Position it correctly from the right */
+    width: 220px;
+    z-index: 10000;
+    background: rgba(255, 243, 205, 0.95);
+    border: 1px solid #ffeb3b;
+    color: #000;
+    font-size: 14px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: none; /* Hide by default as it's triggered by a button */
+}
+#topUsersPanel { /* Assuming this is the 'لوحة الشرف' or top speakers */
+    position: fixed;
+    top: 60px;
+    right: 15px;
+    width: 220px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #2196f3;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    font-size: 14px;
+    z-index: 9999;
+}
+#topUsersList { /* Inside topUsersPanel */
+    padding-left: 18px;
+    margin: 0;
+    color: #333;
+}
+#xpCounter, #levelDisplay, #giftCounter {
+    position: initial; /* Reset fixed positioning as they are in bottom-right-controls */
+    margin-top: 10px; /* Space them out if needed */
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    width: fit-content;
+}
+
+
+/* Existing styles that were in room.html but are better placed here or are general */
+.mic-container {
+    position: relative;
+    display: inline-block;
+}
+
+.crown {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 32px;
+    z-index: 10;
+}
+
+.tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    z-index: 9999;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.pinned {
+    border: 3px solid gold !important;
+    box-shadow: 0 0 10px gold !important;
+}
+
+.stats {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: #ffffffcc;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px #aaa;
+    direction: rtl;
+    z-index: 999;
+}
+
+.react-score {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #28a745;
+    color: white;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.mic-name.muted::after {
+    content: " 🔇";
+    color: red;
+}
+
+.king-glow {
+    color: gold !important;
+    text-shadow: 0 0 8px gold, 0 0 12px orange;
+    font-weight: bold;
+}
+
+.mic-box {
+    background-color: #e0f7fa;
+    padding: 10px;
+    border-radius: 12px;
+    margin: 10px;
+    transition: background 0.5s ease;
+}
+.bg-gift-5 { background-color: #fff9c4 !important; }
+.bg-gift-10 { background-color: #ffe082 !important; }
+.bg-gift-20 { background-color: #ffcc80 !important; }
+.bg-gift-king { background: linear-gradient(45deg, gold, orange) !important; color: #000 !important; }
+
+.gift-flash { animation: flashGift 0.8s ease-in-out; }
+@keyframes flashGift {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.6; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.muted {
+    filter: grayscale(1);
+    border: 2px dashed red;
+}
+
+.star-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: gold;
+    color: black;
+    font-weight: bold;
+    padding: 3px 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 6px gold;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+:root {
+    --bg-color: #f0f8ff;
+    --text-color: #333;
+}
+body.night {
+    --bg-color: #1a1a1a;
+    --text-color: #f0f0f0;
+}
+.night-toggle {
+    position: fixed; /* Keep this if the toggle is separate from button group */
+    top: 10px;
+    left: 10px;
+    background: #444;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+.blocked {
+    background-color: #ccc !important;
+    opacity: 0.4;
+    pointer-events: none;
+    border: 2px dashed red;
+}
+
+.king-crown {
+    position: absolute;
+    top: -20px;
+    right: 40%;
+    font-size: 28px;
+    animation: crownGlow 1.5s infinite;
+}
+@keyframes crownGlow {
+    0% { transform: scale(1); filter: drop-shadow(0 0 4px gold); }
+    50% { transform: scale(1.2); filter: drop-shadow(0 0 10px gold); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 4px gold); }
+}
+
+#user-join-log {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    max-height: 120px;
+    overflow-y: auto;
+    width: 200px;
+    z-index: 10000;
+}
+
+#live-counter {
+    position: fixed;
+    top: 12px;
+    right: 15px;
+    background-color: #007acc;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    box-shadow: 0 0 5px #00000070;
+    z-index: 10000;
+}
+
+#vote-bar {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 10px 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    display: none;
+    z-index: 9999;
+}
+#vote-bar button {
+    margin: 0 8px;
+    padding: 6px 12px;
+    background: #007acc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.vip {
+    border: 3px solid gold !important;
+    box-shadow: 0 0 8px gold;
+}
+.blocked-user {
+    display: none !important;
+}
+
+#top-speakers {
+    position: fixed;
+    top: 55px;
+    left: 15px;
+    background: #222;
+    color: gold;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    max-height: 120px;
+    overflow-y: auto;
+    z-index: 10000;
+    box-shadow: 0 0 5px #00000090;
+}
+#top-speakers h3 {
+    margin-top: 0;
+    font-size: 15px;
+    color: #fff;
+}
+
+#achievements-box {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 150px;
+    background: #ffe680;
+    color: #222;
+    padding: 12px 18px;
+    border-radius: 12px;
+    box-shadow: 0 0 8px #00000060;
+    font-size: 14px;
+    display: none;
+    z-index: 9999;
+}
+
+.dark-mode .chat-message {
+    background-color: #1e1e1e;
+}
+.mic-active::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    background: red;
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.user-status {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+.online { background-color: #28a745; }
+.offline { background-color: #6c757d; }
+
+.gift-animation {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 60px;
+    animation: pop 1s ease-out forwards;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+@keyframes pop {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+.gold-crown {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 28px;
+    background: url('gold-crown.png') no-repeat center;
+    background-size: contain;
+}
+
+#toast {
+    visibility: hidden;
+    min-width: 250px;
+    margin-left: -125px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 10px;
+    padding: 12px;
+    position: fixed;
+    z-index: 9999;
+    left: 50%;
+    bottom: 30px;
+    font-size: 17px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    transition: visibility 0s, opacity 0.5s ease-in-out;
+    opacity: 0;
+}
+#toast.show {
+    visibility: visible;
+    opacity: 1;
 }
