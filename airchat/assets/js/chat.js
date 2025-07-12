@@ -1,114 +1,114 @@
-// chat.js
-// هذا الملف يتعامل مع منطق الدردشة، إرسال واستقبال الرسائل.
-
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Chat JavaScript loaded.');
+    const chatInput = document.getElementById('chat-input');
+    const sendChatBtn = document.getElementById('send-chat-btn');
+    const chatArea = document.getElementById('chat-area');
+    const roomUsersList = document.getElementById('room-users');
+    const userCountSpan = document.getElementById('user-count');
 
-    const messageInput = getElement('#message-input');
-    const sendMessageBtn = getElement('#send-message-btn');
-    const messagesContainer = getElement('#messages-container');
-
-    // Simple message filter (example)
-    const profanityList = ['كلمة1', 'كلمة2', 'كلمة3']; // Add actual forbidden words
-
-    function filterMessage(message) {
-        let filteredMessage = message;
-        profanityList.forEach(word => {
-            const regex = new RegExp(word, 'gi'); // Case-insensitive, global
-            filteredMessage = filteredMessage.replace(regex, '***'); // Replace with asterisks
-        });
-        return filteredMessage;
-    }
-
-    function appendMessage(sender, messageText, type = 'received') {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('chat-message', type);
-
-        const senderSpan = document.createElement('span');
-        senderSpan.classList.add('message-sender');
-        senderSpan.textContent = `${sender}:`;
-
-        const textSpan = document.createElement('span');
-        textSpan.classList.add('message-text');
-        textSpan.textContent = filterMessage(messageText); // Apply filter
-
-        const timeSpan = document.createElement('span');
-        timeSpan.classList.add('message-time');
-        timeSpan.textContent = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-
-        messageElement.appendChild(senderSpan);
-        messageElement.appendChild(textSpan);
-        messageElement.appendChild(timeSpan);
-        messagesContainer.appendChild(messageElement);
-
-        // Scroll to the bottom of the chat
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    // Simulate receiving a message (e.g., from a WebSocket server)
-    function simulateReceivedMessage(sender, messageText) {
-        setTimeout(() => {
-            appendMessage(sender, messageText, 'received');
-            playSound('new-message.mp3'); // Play sound for new message
-        }, 1000);
-    }
-
-    // Send Message Logic
-    if (sendMessageBtn && messageInput && messagesContainer) {
-        sendMessageBtn.addEventListener('click', () => {
-            const messageText = messageInput.value.trim();
-            if (messageText) {
-                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-                const senderName = currentUser ? currentUser.username : 'ضيف';
-                appendMessage(senderName, messageText, 'sent');
-                messageInput.value = ''; // Clear input
-
-                // In a real application, send message to server via WebSocket/AJAX
-                // Example: socket.send(JSON.stringify({ type: 'chatMessage', sender: senderName, message: messageText }));
-
-                // Simulate bot reply or another user's message
-                if (messageText.toLowerCase().includes('مرحبا')) {
-                    simulateReceivedMessage('بوت AirChat', 'أهلاً بك في AirChat! كيف يمكنني مساعدتك؟');
-                } else if (messageText.toLowerCase().includes('كيف الحال')) {
-                     simulateReceivedMessage('بوت AirChat', 'أنا بخير، شكراً لسؤالك!');
-                }
-                updateUserXP(5); // Grant XP for sending a message
-            }
-        });
-
-        // Allow sending message with Enter key
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessageBtn.click();
-            }
-        });
-    }
-
-    // Initial welcome message (simulated)
-    if (messagesContainer) {
-        setTimeout(() => {
-            appendMessage('بوت AirChat', 'أهلاً بك في غرفة الدردشة! استمتع بوقتك.', 'received');
-            playSound('welcome.mp3');
-        }, 500);
-    }
-
-    // Example for updating top XP users (replace with real-time data from server)
-    const topXpUsersList = getElement('#top-xp-users');
-    if (topXpUsersList) {
-        const dummyTopUsers = [
-            { name: 'الملك', xp: 5000 },
-            { name: 'الزعيم', xp: 4500 },
-            { name: 'ماريو', xp: 3000 }
+    // Simulate room users (for frontend display)
+    const currentRoomUsers = JSON.parse(localStorage.getItem('currentRoomUsers')) || [];
+    if (currentRoomUsers.length === 0) {
+        // Initialize with dummy users if empty
+        const dummyUsers = [
+            { username: 'Admin', avatar: 'assets/images/default-avatar.png', rank: 'مشرف' },
+            { username: 'Mahmoud', avatar: 'assets/images/default-avatar.png', rank: 'عضو' },
+            { username: 'Fatima', avatar: 'assets/images/default-avatar.png', rank: 'عضو' },
+            { username: 'Ali', avatar: 'assets/images/default-avatar.png', rank: 'عضو' },
+            { username: 'Noura', avatar: 'assets/images/default-avatar.png', rank: 'VIP' },
         ];
+        localStorage.setItem('currentRoomUsers', JSON.stringify(dummyUsers));
+        updateRoomUsersDisplay(dummyUsers);
+    } else {
+        updateRoomUsersDisplay(currentRoomUsers);
+    }
 
-        function renderTopXpUsers() {
-            topXpUsersList.innerHTML = '';
-            dummyTopUsers.sort((a, b) => b.xp - a.xp).forEach((user, index) => {
-                const li = document.createElement('li');
-                li.innerHTML = `<span class="xp-rank">${index + 1}.</span> ${user.name} - ${user.xp} XP`;
-                topXpUsersList.appendChild(li);
-            });
+    // Add current user to room user list if not already present
+    let currentUser = getCurrentUser();
+    if (currentUser && !currentRoomUsers.some(u => u.username === currentUser.username)) {
+        currentRoomUsers.push({
+            username: currentUser.username,
+            avatar: currentUser.avatar,
+            rank: currentUser.rank
+        });
+        localStorage.setItem('currentRoomUsers', JSON.stringify(currentRoomUsers));
+        updateRoomUsersDisplay(currentRoomUsers);
+        displaySystemMessage(`${currentUser.username} انضم إلى الغرفة.`);
+        playSound('welcome-sound');
+    }
+
+    if (sendChatBtn && chatInput && chatArea) {
+        sendChatBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+
+    function sendMessage() {
+        const messageText = chatInput.value.trim();
+        if (messageText === '') return;
+
+        const user = getCurrentUser(); // Get current user from user.js helper
+        if (!user) {
+            alert('الرجاء تسجيل الدخول لإرسال الرسائل.');
+            window.location.href = 'login.html';
+            return;
         }
-        renderTopXpUsers(); // Initial render
+
+        const timestamp = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-message');
+        if (user.username === getCurrentUser().username) { // Check if it's "my" message
+            messageElement.classList.add('my-message');
+        }
+
+        messageElement.innerHTML = `
+            <img src="${user.avatar || 'assets/images/default-avatar.png'}" alt="Avatar" class="avatar">
+            <div class="message-content">
+                <strong>${user.username}</strong>
+                <p>${messageText}</p>
+                <span class="timestamp">${timestamp}</span>
+            </div>
+        `;
+        chatArea.prepend(messageElement); // Add to top to maintain reverse order
+
+        chatInput.value = ''; // Clear input
+        chatArea.scrollTop = chatArea.scrollHeight; // Scroll to bottom (will effectively be top due to flex-direction-reverse)
+
+        playSound('new-message-sound'); // Play sound for new message
+
+        // Simulate adding XP for sending messages
+        addXP(5); // Assuming addXP function exists in user.js and is globally available
+    }
+
+    // Function to display system messages
+    window.displaySystemMessage = function(message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-message', 'system-message');
+        messageElement.innerHTML = `<p>${message}</p>`;
+        chatArea.prepend(messageElement);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    };
+
+    // Update room user list display
+    function updateRoomUsersDisplay(users) {
+        if (!roomUsersList) return;
+        roomUsersList.innerHTML = ''; // Clear current list
+        userCountSpan.textContent = users.length;
+
+        users.forEach(user => {
+            const userItem = document.createElement('li');
+            userItem.classList.add('user-item');
+            userItem.innerHTML = `
+                <img src="${user.avatar || 'assets/images/default-avatar.png'}" alt="User Avatar">
+                <div class="user-info">
+                    <span class="username">${user.username}</span>
+                    <span class="rank">${user.rank}</span>
+                </div>
+            `;
+            roomUsersList.appendChild(userItem);
+        });
     }
 });
