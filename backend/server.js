@@ -1,67 +1,59 @@
-require('dotenv').config(); // تحميل متغيرات البيئة من ملف .env
+require('dotenv').config(); // تحميل متغيرات .env
 
+const PORT = process.env.PORT || 3000;
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const socketIO = require('socket.io');
 const cors = require('cors');
-const mongoose = require('mongoose'); // استيراد mongoose
+const mongoose = require('mongoose');
 
-// استيراد نماذج البيانات
 const User = require('./models/User');
 const Room = require('./models/Room');
-
-// استيراد مسارات الـ API (المصادقة)
 const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: "*", // السماح بالوصول من أي مصدر (للتطوير)
-        methods: ["GET", "POST"]
-    }
-});
+const io = socketIO(server);
 
-// استخدام CORS للسماح للواجهة الأمامية بالاتصال
-app.use(cors());
-// للسماح للسيرفر بقراءة JSON من الطلبات
+// إعدادات CORS
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST']
+}));
+
+// تحويل البيانات إلى JSON
 app.use(express.json());
 
-// توصيل قاعدة البيانات MongoDB
+// الاتصال بقاعدة بيانات MongoDB
 const MONGODB_URI = process.env.MONGODB_URI;
 mongoose.connect(MONGODB_URI)
-    .then(() => console.log('MongoDB Connected...'))
-    .catch(err => console.error(err));
+  .then(() => console.log('✅ MongoDB Connected...'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
-const PORT = process.env.PORT || 3000; // المنفذ الذي سيعمل عليه السيرفر
-
-// مسار اختبار بسيط للتحقق من أن السيرفر يعمل
+// نقطة فحص السيرفر
 app.get('/', (req, res) => {
-    res.send('AirChat Backend is running!');
+  res.send('AirChat Backend is running!');
 });
 
-// استخدام مسارات المصادقة تحت مسار /api/auth
+// مسارات المصادقة
 app.use('/api/auth', authRoutes);
 
-
-// بدء تشغيل سيرفر Socket.IO
+// WebSocket مع Socket.IO
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+  console.log('✅ A user connected:', socket.id);
 
-    // مثال: استقبال رسائل الدردشة
-    socket.on('chat message', (msg) => {
-        console.log('message: ' + msg);
-        io.emit('chat message', msg); // إرسال الرسالة إلى جميع المتصلين
-    });
+  socket.on('chat message', (msg) => {
+    console.log('💬 Chat message:', msg);
+    io.emit('chat message', msg);
+  });
 
-    // مثال: عند انفصال المستخدم
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-    });
+  socket.on('disconnect', () => {
+    console.log('❌ User disconnected:', socket.id);
+  });
 });
 
-// بدء تشغيل سيرفر HTTP
+// تشغيل السيرفر
 server.listen(PORT, () => {
-    console.log(`AirChat Backend listening on port ${PORT}`);
-    console.log(`Access it at http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Access it at http://localhost:${PORT}`);
 });
