@@ -1,59 +1,42 @@
-require('dotenv').config(); // تحميل متغيرات .env
-
-const PORT = process.env.PORT || 3000;
 const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
-const cors = require('cors');
+const path = require('path');
 const mongoose = require('mongoose');
-
-const User = require('./models/User');
-const Room = require('./models/Room');
-const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-// إعدادات CORS
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST']
-}));
+// MongoDB connection
+mongoose.connect('mongodb+srv://<اسم المستخدم>:<كلمة السر>@<رابط الكلاستر>/<DB>?retryWrites=true&w=majority', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-// تحويل البيانات إلى JSON
-app.use(express.json());
+// Serve frontend files
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// الاتصال بقاعدة بيانات MongoDB
-const MONGODB_URI = process.env.MONGODB_URI;
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ MongoDB Connected...'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
-
-// نقطة فحص السيرفر
-app.get('/', (req, res) => {
-  res.send('AirChat Backend is running!');
+// Routes fallback (404)
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, '../frontend/404.html'));
 });
 
-// مسارات المصادقة
-app.use('/api/auth', authRoutes);
+// Socket.IO events
+io.on('connection', socket => {
+  console.log('A user connected');
 
-// WebSocket مع Socket.IO
-io.on('connection', (socket) => {
-  console.log('✅ A user connected:', socket.id);
-
-  socket.on('chat message', (msg) => {
-    console.log('💬 Chat message:', msg);
+  socket.on('chat message', msg => {
     io.emit('chat message', msg);
   });
 
   socket.on('disconnect', () => {
-    console.log('❌ User disconnected:', socket.id);
+    console.log('User disconnected');
   });
 });
 
-// تشغيل السيرفر
+const PORT = 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Access it at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
