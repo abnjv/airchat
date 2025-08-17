@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirChat! - غرفة الدردشة</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="assets/images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container chat-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>المستخدمون (<span id="user-count">0</span>)</h3>
+            </div>
+            <ul id="room-users" class="user-list">
+                <!-- User list will be populated here -->
+            </ul>
+        </aside>
+        <main class="chat-main">
+            <header class="chat-header">
+                <h1 id="room-name-header">اسم الغرفة</h1>
+                <a href="rooms.html" class="btn danger-btn">مغادرة</a>
+            </header>
+            <div id="chat-area" class="chat-area">
+                <!-- Messages will be appended here -->
+            </div>
+            <footer class="chat-footer">
+                <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا...">
+                <button id="send-chat-btn" class="btn primary-btn"><i class="fas fa-paper-plane"></i> إرسال</button>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Socket.IO client library -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+    <!-- Helper functions -->
+    <script src="user.js"></script>
+
+    <!-- Chat logic -->
+    <script src="chat.js"></script>
+</body>
+</html>
