@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirChat! - الغرف المتاحة</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="assets/images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container rooms-container">
+        <header class="rooms-header">
+            <img src="assets/images/logo.png" alt="AirChat! Logo" class="rooms-logo">
+            <div>
+                <h1 id="welcome-message">مرحباً بك!</h1>
+                <p>اختر غرفة للانضمام أو قم بإنشاء واحدة جديدة.</p>
+            </div>
+            <button id="logout-btn" class="btn danger-btn">تسجيل الخروج <i class="fas fa-sign-out-alt"></i></button>
+        </header>
+
+        <main class="rooms-main">
+            <div class="create-room-section">
+                <h2>إنشاء غرفة جديدة</h2>
+                <form id="create-room-form">
+                    <div class="form-group">
+                        <input type="text" id="room-name" placeholder="أدخل اسم الغرفة" required>
+                        <button type="submit" class="btn success-btn">إنشاء</button>
+                    </div>
+                </form>
+                <p id="rooms-message" class="message-info hidden"></p>
+            </div>
+
+            <h2>الغرف المتاحة</h2>
+            <div id="rooms-list" class="room-list">
+                <!-- Room cards will be dynamically inserted here by rooms.js -->
+                <p>جاري تحميل الغرف...</p>
+            </div>
+        </main>
+
+        <footer class="rooms-footer">
+            <p>&copy; 2025 AirChat!. جميع الحقوق محفوظة.</p>
+        </footer>
+    </div>
+
+    <!-- user.js contains global helper functions like getToken() -->
+    <script src="user.js"></script>
+    <script src="rooms.js"></script>
+</body>
+</html>
