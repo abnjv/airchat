@@ -3,24 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AirChat! - تواصل، استمع، استمتع</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="assets/images/logo.png" type="image/x-icon">
+    <title>AirChat!</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Inter Font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* خلفية فاتحة للنهار */
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark-mode {
+            background-color: #1a202c; /* خلفية داكنة للوضع الليلي */
+            color: #e2e8f0;
+        }
+    </style>
 </head>
-<body class="welcome-page">
-    <div class="welcome-container">
-        <img src="assets/images/logo.png" alt="AirChat Logo" class="welcome-logo">
-        <h1>مرحباً بك في AirChat!</h1>
-        <p>تواصل مع الأصدقاء، تعرف على أشخاص جدد، واستمتع بالدردشة الصوتية والمرئية في غرف متنوعة.</p>
-        <div class="welcome-actions">
-            <a href="login.html" class="btn primary-btn">تسجيل الدخول / إنشاء حساب</a>
-            <a href="rooms.html" class="btn secondary-btn">استعراض الغرف</a>
-        </div>
-        <div class="footer-links">
-            <a href="#">سياسة الخصوصية</a>
-            <a href="#">شروط الاستخدام</a>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+<div id="app" class="flex items-center justify-center min-h-screen p-4">
+    <!-- الشاشة الرئيسية -->
+    <div id="home-screen" class="w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-transform duration-300 transform scale-100">
+        <div class="p-8 text-center flex flex-col items-center">
+            <div class="w-24 h-24 mb-6 flex items-center justify-center bg-indigo-500 rounded-full text-white text-4xl font-bold shadow-lg">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <h1 class="text-4xl font-bold mb-2">مرحباً بك في AirChat!</h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-8">تواصل مع الأصدقاء، تعرف على أشخاص جدد، واستمتع بالدردشة الصوتية والمرئية في غرف متنوعة.</p>
+            <div class="space-y-4 w-full">
+                <button onclick="showScreen('login-screen')" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-md">
+                    تسجيل الدخول
+                </button>
+                <button onclick="showScreen('signup-screen')" class="w-full bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 font-semibold py-3 px-6 rounded-xl border border-indigo-600 dark:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 shadow-md">
+                    إنشاء حساب جديد
+                </button>
+            </div>
         </div>
     </div>
-    <script src="main.js"></script>
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-screen" class="hidden w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden p-8">
+        <h2 class="text-3xl font-bold text-center mb-6">تسجيل الدخول</h2>
+        <form id="login-form" class="space-y-6">
+            <div>
+                <label for="login-username" class="text-sm font-medium flex items-center gap-2 mb-2"><i class="fas fa-user text-indigo-500"></i>اسم المستخدم</label>
+                <input type="text" id="login-username" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all duration-200" placeholder="أدخل اسم المستخدم" required>
+            </div>
+            <div>
+                <label for="login-password" class="text-sm font-medium flex items-center gap-2 mb-2"><i class="fas fa-lock text-indigo-500"></i>كلمة المرور</label>
+                <input type="password" id="login-password" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all duration-200" placeholder="أدخل كلمة المرور" required>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-md">
+                تسجيل الدخول
+            </button>
+            <p class="text-center text-sm mt-4 text-gray-500 dark:text-gray-400">
+                ليس لديك حساب؟ <a href="#" onclick="showScreen('signup-screen')" class="text-indigo-600 hover:underline">إنشاء حساب جديد</a>
+            </p>
+        </form>
+    </div>
+
+    <!-- شاشة التسجيل -->
+    <div id="signup-screen" class="hidden w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden p-8">
+        <h2 class="text-3xl font-bold text-center mb-6">إنشاء حساب جديد</h2>
+        <form id="signup-form" class="space-y-6">
+            <div>
+                <label for="signup-username" class="text-sm font-medium flex items-center gap-2 mb-2"><i class="fas fa-user-plus text-indigo-500"></i>اسم المستخدم</label>
+                <input type="text" id="signup-username" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all duration-200" placeholder="اختر اسم مستخدم" required>
+            </div>
+            <div>
+                <label for="signup-password" class="text-sm font-medium flex items-center gap-2 mb-2"><i class="fas fa-lock text-indigo-500"></i>كلمة المرور</label>
+                <input type="password" id="signup-password" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all duration-200" placeholder="اختر كلمة مرور" required>
+            </div>
+            <div>
+                <label for="signup-confirm-password" class="text-sm font-medium flex items-center gap-2 mb-2"><i class="fas fa-lock text-indigo-500"></i>تأكيد كلمة المرور</label>
+                <input type="password" id="signup-confirm-password" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all duration-200" placeholder="أعد إدخال كلمة المرور" required>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-md">
+                إنشاء حساب
+            </button>
+            <p class="text-center text-sm mt-4 text-gray-500 dark:text-gray-400">
+                لديك حساب بالفعل؟ <a href="#" onclick="showScreen('login-screen')" class="text-indigo-600 hover:underline">تسجيل الدخول</a>
+            </p>
+        </form>
+    </div>
+
+    <!-- شاشة غرف الدردشة -->
+    <div id="rooms-screen" class="hidden w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden p-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-3xl font-bold">غرف الدردشة</h2>
+            <div class="flex items-center gap-4">
+                <button id="dark-mode-toggle" class="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 text-xl">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="logout-btn" class="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="mr-2">خروج</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Create Room Form -->
+        <form id="create-room-form" class="mb-6 flex gap-4">
+            <input type="text" id="create-room-name" class="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500" placeholder="أدخل اسم غرفة جديدة" required>
+            <button type="submit" class="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-indigo-700 transition-all duration-300">إنشاء غرفة</button>
+        </form>
+
+        <div id="rooms-list-container" class="space-y-4">
+            <!-- Room list will be injected here by main.js -->
+        </div>
+    </div>
+
+    <!-- شاشة الدردشة داخل الغرفة -->
+    <div id="chat-room-screen" class="hidden w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden flex flex-col h-[80vh]">
+        <!-- رأس الغرفة -->
+        <div class="p-4 bg-indigo-600 text-white flex items-center justify-between rounded-t-2xl">
+            <button onclick="showScreen('rooms-screen')" class="text-white text-xl hover:text-indigo-200 transition-colors duration-200">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <h2 id="room-title" class="text-xl font-bold">الغرفة العامة</h2>
+            <div class="flex items-center gap-4">
+                <button class="text-white hover:text-indigo-200"><i class="fas fa-video"></i></button>
+                <button class="text-white hover:text-indigo-200"><i class="fas fa-phone"></i></button>
+            </div>
+        </div>
+        <!-- منطقة الرسائل -->
+        <div id="messages-container" class="flex-1 p-4 overflow-y-auto space-y-4">
+            <!-- رسالة من مستخدم آخر -->
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center font-bold text-gray-700 dark:text-gray-300">A</div>
+                <div class="flex-1">
+                    <div class="bg-gray-200 dark:bg-gray-700 p-4 rounded-xl rounded-bl-none shadow-sm">
+                        <span class="font-semibold text-sm">مستخدم 1</span>
+                        <p class="mt-1">مرحبا بالجميع، كيف حالكم؟</p>
+                    </div>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block text-right">03:15 مساءً</span>
+                </div>
+            </div>
+            <!-- رسالة من المستخدم الحالي -->
+            <div class="flex items-start gap-3 justify-end">
+                <div class="flex-1">
+                    <div class="bg-indigo-500 text-white p-4 rounded-xl rounded-br-none shadow-md">
+                        <p>أهلاً بك! أنا بخير، شكراً لك.</p>
+                    </div>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block">03:16 مساءً</span>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white">أ</div>
+            </div>
+             <!-- رسالة من مستخدم آخر -->
+             <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center font-bold text-gray-700 dark:text-gray-300">B</div>
+                <div class="flex-1">
+                    <div class="bg-gray-200 dark:bg-gray-700 p-4 rounded-xl rounded-bl-none shadow-sm">
+                        <span class="font-semibold text-sm">مستخدم 2</span>
+                        <p class="mt-1">هل هناك أحد يحب التصميم هنا؟</p>
+                    </div>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block text-right">03:17 مساءً</span>
+                </div>
+            </div>
+        </div>
+        <!-- شريط إرسال الرسائل -->
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-3">
+            <button class="text-gray-500 dark:text-gray-400 text-xl hover:text-indigo-600 transition-colors duration-200"><i class="fas fa-paperclip"></i></button>
+            <button class="text-gray-500 dark:text-gray-400 text-xl hover:text-indigo-600 transition-colors duration-200"><i class="fas fa-camera"></i></button>
+            <input type="text" id="message-input" class="flex-1 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none" placeholder="اكتب رسالتك..." required>
+            <button id="send-btn" class="bg-indigo-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-indigo-700 transition-colors duration-200">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Socket.IO client library -->
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script src="main.js"></script>
 </body>
 </html>

@@ -1,150 +1,267 @@
-// main.js
-// هذا الملف يحتوي على الوظائف العامة التي قد تستخدمها جميع الصفحات أو لتهيئة التطبيق
+// --- DOM Elements ---
+const app = document.getElementById('app');
+const homeScreen = document.getElementById('home-screen');
+const loginScreen = document.getElementById('login-screen');
+const signupScreen = document.getElementById('signup-screen');
+const roomsScreen = document.getElementById('rooms-screen');
+const chatRoomScreen = document.getElementById('chat-room-screen');
+const roomTitle = document.getElementById('room-title');
+const messagesContainer = document.getElementById('messages-container');
+const messageInput = document.getElementById('message-input');
+const sendBtn = document.getElementById('send-btn');
+const loginForm = document.getElementById('login-form');
+const signupForm = document.getElementById('signup-form');
+const roomsListContainer = document.getElementById('rooms-list-container');
+const createRoomForm = document.getElementById('create-room-form');
+const logoutBtn = document.getElementById('logout-btn');
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Main JavaScript loaded.');
+// --- State Management ---
+let state = {
+    currentUser: null,
+    token: null,
+    rooms: [],
+    currentRoom: null,
+    socket: null,
+};
 
-    // === Global Utility Functions ===
+// --- API & Core Functions ---
 
-    /**
-     * Helper function to select an element
-     * @param {string} selector - CSS selector string
-     * @returns {HTMLElement|null} The selected element or null
-     */
-    window.getElement = (selector) => {
-        return document.querySelector(selector);
-    };
+function saveSession(userData) {
+    state.currentUser = userData.user || userData;
+    state.token = userData.token;
+    localStorage.setItem('airchat_session', JSON.stringify({ currentUser: state.currentUser, token: state.token }));
+}
 
-    /**
-     * Helper function to select all elements
-     * @param {string} selector - CSS selector string
-     * @returns {NodeListOf<HTMLElement>} A NodeList of selected elements
-     */
-    window.getAllElements = (selector) => {
-        return document.querySelectorAll(selector);
-    };
+function loadSession() {
+    const session = localStorage.getItem('airchat_session');
+    if (session) {
+        const parsedSession = JSON.parse(session);
+        state.currentUser = parsedSession.currentUser;
+        state.token = parsedSession.token;
+        return true;
+    }
+    return false;
+}
 
-    /**
-     * Shows a message temporarily in a designated message area.
-     * @param {string} message - The message to display.
-     * @param {string} type - 'info', 'success', 'error'.
-     * @param {HTMLElement} targetElement - The element where the message should be displayed.
-     * @param {number} duration - How long to display the message in milliseconds.
-     */
-    window.displayMessage = (message, type, targetElement, duration = 3000) => {
-        if (!targetElement) {
-            console.warn("Target element for message display not found.");
+function clearSession() {
+    if (state.socket) {
+        state.socket.disconnect();
+    }
+    state = { currentUser: null, token: null, rooms: [], currentRoom: null, socket: null };
+    localStorage.removeItem('airchat_session');
+    showScreen('home-screen');
+}
+
+async function fetchAndRenderRooms() {
+    if (!state.token) return;
+    try {
+        const res = await fetch('/api/rooms', { headers: { 'Authorization': `Bearer ${state.token}` } });
+        if (!res.ok) throw new Error('Could not fetch rooms');
+        state.rooms = await res.json();
+        roomsListContainer.innerHTML = '';
+        if (state.rooms.length === 0) {
+            roomsListContainer.innerHTML = '<p class="text-center text-gray-500">No rooms available. Create one!</p>';
             return;
         }
-
-        targetElement.textContent = message;
-        targetElement.className = `message-info message-${type}`; // Resets classes
-        targetElement.classList.remove('hidden');
-
-        setTimeout(() => {
-            targetElement.classList.add('hidden');
-        }, duration);
-    };
-
-    // === Login/Register Page Logic (basic toggle) ===
-    const showRegisterLink = getElement('#show-register');
-    const showLoginLink = getElement('#show-login');
-    const loginForm = getElement('#login-form');
-    const registerForm = getElement('#register-form');
-
-    if (showRegisterLink && showLoginLink && loginForm && registerForm) {
-        showRegisterLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginForm.classList.add('hidden');
-            registerForm.classList.remove('hidden');
+        state.rooms.forEach(room => {
+            const roomCard = document.createElement('div');
+            roomCard.className = 'p-5 bg-gray-100 dark:bg-gray-700 rounded-xl shadow-md cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center justify-between';
+            roomCard.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xl"><i class="fas fa-users"></i></div>
+                    <div>
+                        <h3 class="font-semibold text-lg">${room.name}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Participants: ${room.participants.length}</p>
+                    </div>
+                </div>
+            `;
+            roomCard.onclick = () => showChatRoom(room);
+            roomsListContainer.appendChild(roomCard);
         });
-
-        showLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerForm.classList.add('hidden');
-            loginForm.classList.remove('hidden');
-        });
+    } catch (error) {
+        console.error('Error fetching rooms:', error);
+        roomsListContainer.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
     }
+}
 
-    // === Room Page - Basic Timer (for demo, replace with server-synced time) ===
-    const roomDurationElement = getElement('#room-duration');
-    if (roomDurationElement) {
-        let seconds = 0;
-        let minutes = 0;
-        let hours = 0;
-
-        setInterval(() => {
-            seconds++;
-            if (seconds === 60) {
-                seconds = 0;
-                minutes++;
-                if (minutes === 60) {
-                    minutes = 0;
-                    hours++;
-                }
-            }
-            const formattedTime = [hours, minutes, seconds]
-                .map(unit => unit < 10 ? '0' + unit : unit)
-                .join(':');
-            roomDurationElement.textContent = formattedTime;
-        }, 1000);
+function showScreen(screenId) {
+    if (state.socket && screenId !== 'chat-room-screen') {
+        state.socket.disconnect();
+        state.socket = null;
     }
-
-    // === Leave Room Button ===
-    const leaveRoomBtn = getElement('#leave-room-btn');
-    if (leaveRoomBtn) {
-        leaveRoomBtn.addEventListener('click', () => {
-            // In a real application, this would send a request to the server
-            // to leave the room, clean up resources, etc.
-            alert('تمت مغادرة الغرفة. سيتم نقلك إلى صفحة الغرف المتاحة.');
-            window.location.href = 'rooms.html'; // Redirect to rooms page
-        });
+    const screens = [homeScreen, loginScreen, signupScreen, roomsScreen, chatRoomScreen];
+    screens.forEach(screen => screen && screen.classList.add('hidden'));
+    const screenToShow = document.getElementById(screenId);
+    if (screenToShow) {
+        screenToShow.classList.remove('hidden');
     }
+    if (screenId === 'rooms-screen') {
+        fetchAndRenderRooms();
+    }
+}
 
-    // === Example for dynamic user list in room.html (replace with actual data from server) ===
-    const userListElement = getElement('#user-list');
-    if (userListElement) {
-        const dummyUsers = [
-            { name: 'محمد', avatar: 'default-avatar.png', isOnline: true, hasMic: true, rank: 'VIP' },
-            { name: 'فاطمة', avatar: 'default-avatar.png', isOnline: true, hasMic: false, rank: 'عضو' },
-            { name: 'أحمد', avatar: 'default-avatar.png', isOnline: true, hasMic: true, rank: 'مشرف' },
-            { name: 'ليلى', avatar: 'default-avatar.png', isOnline: true, hasMic: false, rank: 'عضو' },
-            { name: 'علي', avatar: 'default-avatar.png', isOnline: false, hasMic: false, rank: 'عضو' }
-        ];
+function showChatRoom(room) {
+    state.currentRoom = room;
+    roomTitle.textContent = room.name;
+    messagesContainer.innerHTML = '';
+    showScreen('chat-room-screen');
+    connectToChat();
+}
 
-        function renderUserList() {
-            userListElement.innerHTML = ''; // Clear existing list
-            dummyUsers.forEach(user => {
-                const li = document.createElement('li');
-                li.classList.add('user-item');
-                if (!user.isOnline) {
-                    li.classList.add('offline');
-                }
-                // Add an event listener for user item click (e.g., to show user profile/options)
-                li.addEventListener('click', () => {
-                    alert(`تم النقر على المستخدم: ${user.name}`);
-                    // Implement user profile pop-up or admin actions here
-                });
+function connectToChat() {
+    if (state.socket) {
+        state.socket.disconnect();
+    }
+    state.socket = io();
+    state.socket.on('connect', () => {
+        console.log('Socket connected!');
+        state.socket.emit('joinRoom', { username: state.currentUser.username, room: state.currentRoom._id });
+    });
+    state.socket.on('message', (message) => {
+        appendMessage(message);
+    });
+}
 
-                li.innerHTML = `
-                    <img src="assets/images/${user.avatar}" alt="${user.name} Avatar" class="user-avatar">
-                    <span class="user-name">${user.name}</span>
-                    <span class="user-status ${user.isOnline ? 'online' : 'offline'}"></span>
-                    <i class="fas fa-microphone user-mic-status ${user.hasMic ? 'active' : ''}"></i>
-                    <span class="user-rank">(${user.rank})</span>
-                `;
-                userListElement.appendChild(li);
-            });
-            // Update online users count
-            const onlineCountElement = getElement('#online-users-count');
-            if(onlineCountElement){
-                onlineCountElement.textContent = dummyUsers.filter(u => u.isOnline).length;
-            }
+function appendMessage(msg) {
+    const messageWrapper = document.createElement('div');
+    const messageBubble = document.createElement('div');
+
+    // System message
+    if (typeof msg === 'string') {
+        messageWrapper.className = 'text-center my-2';
+        messageBubble.className = 'inline-block bg-gray-200 dark:bg-gray-600 text-sm rounded-full px-3 py-1';
+        messageBubble.textContent = msg;
+    } else { // User message
+        const isMyMessage = msg.username === state.currentUser.username;
+        messageWrapper.className = `flex items-start gap-3 ${isMyMessage ? 'justify-end' : ''}`;
+        messageBubble.className = `flex-1 ${isMyMessage ? 'text-right' : ''}`;
+        const content = `
+            <div class="inline-block ${isMyMessage ? 'bg-indigo-500 text-white' : 'bg-gray-200 dark:bg-gray-700'} p-4 rounded-xl ${isMyMessage ? 'rounded-br-none' : 'rounded-bl-none'} shadow-md">
+                ${!isMyMessage ? `<span class="font-semibold text-sm">${msg.username}</span>` : ''}
+                <p class="mt-1">${msg.text}</p>
+            </div>
+            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block">${new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'})}</span>
+        `;
+        messageBubble.innerHTML = content;
+    }
+    messageWrapper.appendChild(messageBubble);
+    messagesContainer.appendChild(messageWrapper);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function sendMessage() {
+    const messageText = messageInput.value.trim();
+    if (messageText === '' || !state.socket) return;
+    state.socket.emit('chatMessage', {
+        room: state.currentRoom._id,
+        message: {
+            text: messageText,
+            username: state.currentUser.username
         }
-        renderUserList(); // Initial render
+    });
+    messageInput.value = '';
+}
+
+// --- Event Listeners ---
+const darkModeToggle = document.getElementById('dark-mode-toggle');
+
+if (darkModeToggle) {
+    darkModeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        // Optional: Change icon
+        const icon = darkModeToggle.querySelector('i');
+        if (document.body.classList.contains('dark')) {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    });
+}
+
+
+if (logoutBtn) logoutBtn.addEventListener('click', clearSession);
+if (createRoomForm) {
+    createRoomForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const roomNameInput = document.getElementById('create-room-name');
+        const roomName = roomNameInput.value.trim();
+        if (!roomName) return;
+        try {
+            const res = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
+                body: JSON.stringify({ name: roomName }),
+            });
+            if (!res.ok) throw new Error((await res.json()).message || 'Failed to create room');
+            roomNameInput.value = '';
+            fetchAndRenderRooms();
+        } catch (error) {
+            alert(`Create Room Error: ${error.message}`);
+        }
+    });
+}
+
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Login failed');
+            saveSession(data);
+            showScreen('rooms-screen');
+        } catch (error) {
+            alert(`Login Error: ${error.message}`);
+        }
+    });
+}
+
+if (signupForm) {
+    signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('signup-username').value;
+        const password = document.getElementById('signup-password').value;
+        if (password !== document.getElementById('signup-confirm-password').value) return alert('Passwords do not match!');
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Signup failed');
+            saveSession(data);
+            showScreen('rooms-screen');
+        } catch (error) {
+            alert(`Signup Error: ${error.message}`);
+        }
+    });
+}
+
+if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+if (messageInput) messageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
     }
 });
 
-// هذا الكود يمكن أن يحتوي على دوال مساعدة عامة أخرى، مثل
-// التعامل مع الـ AJAX requests (fetch API)
-// أو وظائف تهيئة لواجهات المستخدم في صفحات متعددة.
+// --- App Initialization ---
+
+function init() {
+    if (loadSession()) {
+        showScreen('rooms-screen');
+    } else {
+        showScreen('home-screen');
+    }
+}
+
+init();

@@ -14,7 +14,7 @@ const createRoom = async (req, res) => {
     try {
         const room = await Room.create({
             name,
-            // The creator is automatically a participant
+            owner: req.user._id,
             participants: [req.user._id],
         });
 
