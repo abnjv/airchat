@@ -1,29 +1,5 @@
-[dotenv@17.2.0] injecting env (0) from .env (tip: ⚙️  override existing env vars with { override: true })
-node:internal/modules/cjs/loader:1404
-  throw err;
-  ^
-
-Error: Cannot find module 'axios'
-Require stack:
-- /app/backend/controllers/geminiController.js
-- /app/backend/routes/geminiRoutes.js
-- /app/backend/server.js
-    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
-    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
-    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
-    at Function._load (node:internal/modules/cjs/loader:1211:37)
-    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
-    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
-    at Module.require (node:internal/modules/cjs/loader:1487:12)
-    at require (node:internal/modules/helpers:135:16)
-    at Object.<anonymous> (/app/backend/controllers/geminiController.js:1:15)
-    at Module._compile (node:internal/modules/cjs/loader:1730:14) {
-  code: 'MODULE_NOT_FOUND',
-  requireStack: [
-    '/app/backend/controllers/geminiController.js',
-    '/app/backend/routes/geminiRoutes.js',
-    '/app/backend/server.js'
-  ]
-}
-
-Node.js v22.17.1
+[dotenv@17.2.0] injecting env (0) from .env (tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] })
+(node:45750) [MONGODB DRIVER] Warning: useNewUrlParser is a deprecated option: useNewUrlParser has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:45750) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+AirChat Backend listening on port 3000
