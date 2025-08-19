@@ -4,7 +4,11 @@
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --testTimeout=10000"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "forceExit": true
   },
   "keywords": [
     "chat",
@@ -22,5 +26,10 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.4",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "jest": "^30.0.5",
+    "mongodb-memory-server": "^10.2.0",
+    "supertest": "^7.1.4"
   }
 }

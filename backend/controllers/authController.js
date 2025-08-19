@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const asyncHandler = require('../middleware/asyncHandler');
 
 // Helper function to generate JWT token
 const generateToken = (id) => {
@@ -11,69 +12,62 @@ const generateToken = (id) => {
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
-const registerUser = async (req, res) => {
+const registerUser = asyncHandler(async (req, res) => {
     const { username, password } = req.body;
 
-    // A basic validation
     if (!username || !password) {
-        return res.status(400).json({ message: 'Please enter all fields' });
+        res.status(400);
+        throw new Error('Please enter all fields');
     }
 
-    try {
-        const userExists = await User.findOne({ username });
+    if (password.length < 6) {
+        res.status(400);
+        throw new Error('Password must be at least 6 characters');
+    }
 
-        if (userExists) {
-            return res.status(400).json({ message: 'User with that username already exists' });
-        }
+    const userExists = await User.findOne({ username });
 
-        // The email field is required in the model, so I'll use a dummy one for now.
-        // This should be addressed later if email functionality is desired.
-        const email = `${username}@example.com`;
+    if (userExists) {
+        res.status(400);
+        throw new Error('User with that username already exists');
+    }
 
-        const user = await User.create({
-            username,
-            email,
-            password,
+    const user = await User.create({
+        username,
+        password,
+    });
+
+    if (user) {
+        res.status(201).json({
+            _id: user._id,
+            username: user.username,
+            token: generateToken(user._id),
         });
-
-        if (user) {
-            res.status(201).json({
-                _id: user._id,
-                username: user.username,
-                token: generateToken(user._id),
-            });
-        } else {
-            res.status(400).json({ message: 'Invalid user data' });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+    } else {
+        res.status(400);
+        throw new Error('Invalid user data');
     }
-};
+});
 
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
 // @access  Public
-const loginUser = async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
     const { username, password } = req.body;
 
-    try {
-        const user = await User.findOne({ username });
+    const user = await User.findOne({ username });
 
-        if (user && (await user.matchPassword(password))) {
-            res.json({
-                _id: user._id,
-                username: user.username,
-                token: generateToken(user._id),
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid username or password' });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+    if (user && (await user.matchPassword(password))) {
+        res.json({
+            _id: user._id,
+            username: user.username,
+            token: generateToken(user._id),
+        });
+    } else {
+        res.status(401);
+        throw new Error('Invalid username or password');
     }
-};
+});
 
 module.exports = {
     registerUser,
