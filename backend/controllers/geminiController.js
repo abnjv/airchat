@@ -1,5 +1,3 @@
-const axios = require('axios');
-
 // @desc    Chat with Gemini AI
 // @route   POST /api/gemini/chat
 // @access  Private
@@ -25,15 +23,23 @@ const chatWithGemini = async (req, res) => {
     };
 
     try {
-        const response = await axios.post(apiUrl, payload, {
-            headers: { 'Content-Type': 'application/json' }
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
         });
 
-        const modelResponse = response.data.candidates[0].content.parts[0].text;
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error.message || 'Gemini API request failed');
+        }
+
+        const data = await response.json();
+        const modelResponse = data.candidates[0].content.parts[0].text;
         res.json({ response: modelResponse });
 
     } catch (error) {
-        console.error('Error calling Gemini API:', error.response ? error.response.data : error.message);
+        console.error('Error calling Gemini API:', error.message);
         res.status(500).json({ message: 'Failed to get a response from Gemini AI.' });
     }
 };
