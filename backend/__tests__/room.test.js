@@ -51,7 +51,7 @@ describe('Room API', () => {
 
         expect(res.statusCode).toEqual(201);
         expect(res.body).toHaveProperty('name', 'Test Room');
-        expect(res.body).toHaveProperty('owner', userId);
+        expect(res.body.owner).toHaveProperty('_id', userId);
     });
 
     it('should not create a room when not authenticated', async () => {

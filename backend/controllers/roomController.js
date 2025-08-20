@@ -19,7 +19,13 @@ const createRoom = asyncHandler(async (req, res) => {
         participants: [req.user._id],
     });
 
-    res.status(201).json(room);
+    // Populate owner details for the response and socket event
+    const newRoom = await Room.findById(room._id).populate('owner', 'username');
+
+    res.status(201).json(newRoom);
+
+    // Emit an event to all clients
+    req.io.emit('room_created', newRoom);
 });
 
 // @desc    Get all rooms

@@ -42,6 +42,12 @@ mongoose.connect(MONGO_URI, {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Make io accessible to our router
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
 // Mount routers
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
