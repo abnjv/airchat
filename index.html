@@ -186,6 +186,7 @@
             </button>
             <h2 id="room-title" class="text-xl font-bold">الغرفة العامة</h2>
             <div class="flex items-center gap-4">
+                <button id="leave-room-btn" class="text-white bg-gray-500 hover:bg-gray-600 px-3 py-1 rounded-md"><i class="fas fa-door-open"></i></button>
                 <button id="hang-up-btn" class="hidden text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-md"><i class="fas fa-phone-slash"></i></button>
                 <button onclick="showScreen('profile-screen')" class="text-white hover:text-indigo-200"><i class="fas fa-user-circle"></i></button>
                 <button class="text-white hover:text-indigo-200"><i class="fas fa-video"></i></button>
@@ -316,7 +317,7 @@
                 <i class="fas fa-phone text-indigo-500 text-lg"></i>
                 <span class="font-semibold">اتصال</span>
             </button>
-            <button onclick="kickUser()" class="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+            <button id="modal-kick-btn" class="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
                 <i class="fas fa-ban text-red-500 text-lg"></i>
                 <span class="font-semibold">طرد</span>
             </button>

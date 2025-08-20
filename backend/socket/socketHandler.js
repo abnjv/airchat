@@ -89,10 +89,11 @@ const socketHandler = (io) => {
         socket.on('ice-candidate', (data) => relayToUser(io, socket, 'ice-candidate', data));
 
 
-        socket.on('kick-user', async ({ roomId, userIdToKick, requestingUserId }) => {
+        socket.on('kick-user', async ({ roomId, userIdToKick }) => {
             try {
                 const room = await Room.findById(roomId);
-                if (room && room.owner.toString() === requestingUserId) {
+                // Security Fix: Use the authenticated user from the socket connection
+                if (room && room.owner.toString() === socket.user._id.toString()) {
                     const socketIdToKick = userSockets[userIdToKick];
                     if (socketIdToKick) {
                         io.to(socketIdToKick).emit('kicked', { roomName: room.name });
