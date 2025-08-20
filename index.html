@@ -186,9 +186,22 @@
             </button>
             <h2 id="room-title" class="text-xl font-bold">الغرفة العامة</h2>
             <div class="flex items-center gap-4">
+                <button id="hang-up-btn" class="hidden text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-md"><i class="fas fa-phone-slash"></i></button>
                 <button onclick="showScreen('profile-screen')" class="text-white hover:text-indigo-200"><i class="fas fa-user-circle"></i></button>
                 <button class="text-white hover:text-indigo-200"><i class="fas fa-video"></i></button>
                 <button class="text-white hover:text-indigo-200"><i class="fas fa-phone"></i></button>
+            </div>
+        </div>
+
+        <!-- Video Streams -->
+        <div id="video-container" class="hidden grid grid-cols-1 md:grid-cols-2 gap-2 p-2 bg-gray-900">
+            <div class="relative">
+                <video id="local-video" autoplay muted playsinline class="w-full h-auto rounded-md transform scale-x-[-1]"></video>
+                <span class="absolute bottom-2 left-2 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">أنت</span>
+            </div>
+            <div class="relative">
+                <video id="remote-video" autoplay playsinline class="w-full h-auto rounded-md transform scale-x-[-1]"></video>
+                 <span class="absolute bottom-2 left-2 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">المستخدم الآخر</span>
             </div>
         </div>
 
@@ -274,20 +287,20 @@
             </div>
         </div>
 
-        <!-- Message Input Bar -->
-        <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-3 bg-white dark:bg-gray-800">
+        <!-- Message Input Form -->
+        <form id="message-form" class="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-3 bg-white dark:bg-gray-800">
             <!-- Mute/Unmute Button -->
-            <button id="self-mute-btn" class="text-gray-500 dark:text-gray-400 text-2xl w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200">
+            <button id="self-mute-btn" type="button" class="text-gray-500 dark:text-gray-400 text-2xl w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200">
                 <i class="fas fa-microphone-slash"></i>
             </button>
             <input type="text" id="message-input" class="flex-1 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none" placeholder="اكتب رسالتك..." required>
-            <button id="gemini-btn" class="bg-gradient-to-br from-yellow-400 to-orange-500 text-black w-10 h-10 rounded-full flex items-center justify-center hover:from-yellow-500 hover:to-orange-600 transition-colors duration-200 shadow-md">
+            <button id="gemini-btn" type="button" class="bg-gradient-to-br from-yellow-400 to-orange-500 text-black w-10 h-10 rounded-full flex items-center justify-center hover:from-yellow-500 hover:to-orange-600 transition-colors duration-200 shadow-md">
                 <i class="fas fa-robot"></i>
             </button>
-            <button id="send-btn" class="bg-gradient-to-br from-indigo-600 to-blue-700 text-white w-10 h-10 rounded-full flex items-center justify-center hover:from-indigo-700 hover:to-blue-800 transition-colors duration-200 shadow-md">
+            <button id="send-btn" type="submit" class="bg-gradient-to-br from-indigo-600 to-blue-700 text-white w-10 h-10 rounded-full flex items-center justify-center hover:from-indigo-700 hover:to-blue-800 transition-colors duration-200 shadow-md">
                 <i class="fas fa-paper-plane"></i>
             </button>
-        </div>
+        </form>
     </div>
 </div>
 
@@ -299,7 +312,7 @@
             <button onclick="hideModal('user-options-modal')" class="text-gray-400 hover:text-gray-600 text-2xl"><i class="fas fa-times"></i></button>
         </div>
         <div class="space-y-4">
-            <button onclick="startCall()" class="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+            <button id="modal-call-btn" class="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
                 <i class="fas fa-phone text-indigo-500 text-lg"></i>
                 <span class="font-semibold">اتصال</span>
             </button>
@@ -321,10 +334,10 @@
         <h3 id="caller-name" class="text-xl font-bold mb-4"></h3>
         <p class="text-gray-600 dark:text-gray-400 mb-6">يرغب في الاتصال بك...</p>
         <div class="flex justify-around gap-4">
-            <button onclick="acceptCall()" class="w-full py-3 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors">
+            <button id="accept-call-btn" class="w-full py-3 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors">
                 <i class="fas fa-phone-alt"></i>
             </button>
-            <button onclick="declineCall()" class="w-full py-3 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors">
+            <button id="decline-call-btn" class="w-full py-3 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors">
                 <i class="fas fa-phone-slash"></i>
             </button>
         </div>
