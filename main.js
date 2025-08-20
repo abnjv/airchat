@@ -14,6 +14,10 @@ const elements = {
     createRoomForm: document.getElementById('create-room-form'),
     createRoomNameInput: document.getElementById('create-room-name'),
     logoutBtn: document.getElementById('logout-btn'),
+    showLoginBtn: document.getElementById('show-login-btn'),
+    showSignupBtn: document.getElementById('show-signup-btn'),
+    loginToSignupLink: document.getElementById('login-to-signup-link'),
+    signupToLoginLink: document.getElementById('signup-to-login-link'),
     // ... other elements
 };
 
@@ -42,12 +46,10 @@ function showScreen(screenId) {
         screenToShow.classList.remove('hidden');
     }
 
-    // If we are showing the rooms screen, fetch and render the rooms.
     if (screenId === 'rooms-screen') {
         fetchAndDisplayRooms();
-        connectSocket(); // Connect socket when entering rooms screen
+        connectSocket();
     } else {
-        // Disconnect socket if we leave the rooms area
         if (state.socket) {
             state.socket.disconnect();
             state.socket = null;
@@ -101,7 +103,6 @@ function addRoomToList(room) {
             <span>${room.participants.length}</span>
         </div>
     `;
-    // roomElement.onclick = () => showChatRoom(room); // Future functionality
     elements.roomsListContainer.appendChild(roomElement);
 }
 
@@ -116,7 +117,7 @@ async function fetchAndDisplayRooms() {
         const rooms = await res.json();
         state.rooms = rooms;
 
-        elements.roomsListContainer.innerHTML = ''; // Clear existing list
+        elements.roomsListContainer.innerHTML = '';
         if (rooms.length === 0) {
             elements.roomsListContainer.innerHTML = `<p class="text-center text-gray-500">No rooms available. Create one to start chatting!</p>`;
         } else {
@@ -124,7 +125,6 @@ async function fetchAndDisplayRooms() {
         }
     } catch (error) {
         console.error(error);
-        // showMessage('Could not load rooms.', true);
     }
 }
 
@@ -148,13 +148,10 @@ async function handleCreateRoom(event) {
             throw new Error(errorData.message || 'Failed to create room');
         }
 
-        // The room will be added via the socket event, so we don't need to do anything here
-        // except clear the input.
         elements.createRoomNameInput.value = '';
 
     } catch (error) {
         console.error(error);
-        // showMessage(error.message, true);
     }
 }
 
@@ -169,24 +166,19 @@ function connectSocket() {
     });
 
     state.socket.on('connect', () => {
-        console.log('Socket connected:', state.socket.id);
-        // Register user ID with socket for signaling
         if (state.currentUser) {
             state.socket.emit('register-socket', state.currentUser._id);
         }
     });
 
     state.socket.on('room_created', (newRoom) => {
-        console.log('New room created event received:', newRoom);
-        // Add the new room to the list without a full refresh
         addRoomToList(newRoom);
     });
 
     state.socket.on('disconnect', () => {
-        console.log('Socket disconnected');
+        state.socket = null;
     });
 }
-
 
 // =================================================================================
 // Event Listeners & Initialization
@@ -210,7 +202,6 @@ async function handleLogin(event) {
         showScreen('rooms-screen');
     } catch (error) {
         console.error('Login failed:', error);
-        // showMessage(error.message, true);
     }
 }
 
@@ -218,7 +209,6 @@ async function handleSignup(event) {
     event.preventDefault();
     const username = elements.signupForm.elements['signup-username'].value;
     const password = elements.signupForm.elements['signup-password'].value;
-    // You might want to add confirm password validation here
 
     try {
         const res = await fetch('/api/auth/register', {
@@ -233,17 +223,23 @@ async function handleSignup(event) {
         showScreen('rooms-screen');
     } catch (error) {
         console.error('Signup failed:', error);
-        // showMessage(error.message, true);
     }
 }
 
-
 function setupEventListeners() {
+    // Form submissions
     elements.loginForm.addEventListener('submit', handleLogin);
     elements.signupForm.addEventListener('submit', handleSignup);
     elements.createRoomForm.addEventListener('submit', handleCreateRoom);
+
+    // Screen navigation buttons & links
+    elements.showLoginBtn.addEventListener('click', () => showScreen('login-screen'));
+    elements.showSignupBtn.addEventListener('click', () => showScreen('signup-screen'));
+    elements.loginToSignupLink.addEventListener('click', (e) => { e.preventDefault(); showScreen('signup-screen'); });
+    elements.signupToLoginLink.addEventListener('click', (e) => { e.preventDefault(); showScreen('login-screen'); });
+
+    // Other UI buttons
     elements.logoutBtn.addEventListener('click', logout);
-    // ... other event listeners
 }
 
 function init() {
