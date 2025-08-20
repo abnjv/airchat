@@ -7,33 +7,14 @@ const elements = {
     signupScreen: document.getElementById('signup-screen'),
     roomsScreen: document.getElementById('rooms-screen'),
     chatRoomScreen: document.getElementById('chat-room-screen'),
-    profileScreen: document.getElementById('profile-screen'),
     roomTitle: document.getElementById('room-title'),
-    messagesContainer: document.getElementById('messages-container'),
-    messageInput: document.getElementById('message-input'),
-    sendBtn: document.getElementById('send-btn'),
-    geminiBtn: document.getElementById('gemini-btn'),
-    profileFileInput: document.getElementById('profile-file-input'),
-    profilePicture: document.getElementById('profile-picture'),
-    zeroFrame: document.getElementById('zero-frame'),
-    toggleZeroBtn: document.getElementById('toggle-zero-btn'),
-    userIdElement: document.getElementById('user-id'),
-    myProfilePic: document.getElementById('my-profile-pic'),
-    myMicIcon: document.getElementById('my-mic-icon'),
-    myGlowCircle: document.getElementById('my-glow-circle'),
-    selfMuteBtn: document.getElementById('self-mute-btn'),
-    userOptionsModal: document.getElementById('user-options-modal'),
-    modalUsername: document.getElementById('modal-username'),
-    callModal: document.getElementById('call-modal'),
-    callerName: document.getElementById('caller-name'),
-    messageBox: document.getElementById('message-box'),
-    messageText: document.getElementById('message-text'),
     loginForm: document.getElementById('login-form'),
     signupForm: document.getElementById('signup-form'),
-    roomsListContainer: document.querySelector('#rooms-screen .space-y-4'),
+    roomsListContainer: document.getElementById('rooms-list-container'),
     createRoomForm: document.getElementById('create-room-form'),
-    logoutBtn: document.querySelector('#rooms-screen button'),
-    participantsContainer: document.querySelector('#chat-room-screen .grid'),
+    createRoomNameInput: document.getElementById('create-room-name'),
+    logoutBtn: document.getElementById('logout-btn'),
+    // ... other elements
 };
 
 // =================================================================================
@@ -45,10 +26,7 @@ let state = {
     rooms: [],
     currentRoom: null,
     socket: null,
-    localStream: null,
-    peerConnections: {},
-    selectedUser: null,
-    chatHistory: [],
+    // ... other state properties
 };
 
 // =================================================================================
@@ -56,49 +34,29 @@ let state = {
 // =================================================================================
 
 function showScreen(screenId) {
-    if (state.socket && screenId !== 'chat-room-screen') {
-        state.socket.disconnect();
-        state.socket = null;
-        if (state.localStream) {
-            state.localStream.getTracks().forEach(track => track.stop());
-            state.localStream = null;
-        }
-        Object.values(state.peerConnections).forEach(pc => pc.close());
-        state.peerConnections = {};
-    }
-    const allScreens = [elements.homeScreen, elements.loginScreen, elements.signupScreen, elements.roomsScreen, elements.chatRoomScreen, elements.profileScreen];
+    const allScreens = [elements.homeScreen, elements.loginScreen, elements.signupScreen, elements.roomsScreen, elements.chatRoomScreen];
     allScreens.forEach(screen => screen && screen.classList.add('hidden'));
 
     const screenToShow = document.getElementById(screenId);
-    if (screenToShow) screenToShow.classList.remove('hidden');
+    if (screenToShow) {
+        screenToShow.classList.remove('hidden');
+    }
 
-    if (screenId === 'rooms-screen') fetchAndRenderRooms();
-    if (screenId === 'profile-screen') renderProfile();
-}
-
-function showMessage(message, isError = false) {
-    elements.messageText.textContent = message;
-    elements.messageBox.classList.remove('hidden');
-    setTimeout(() => {
-        elements.messageBox.querySelector('div').classList.remove('scale-95', 'opacity-0');
-        elements.messageBox.querySelector('div').classList.add('scale-100', 'opacity-100');
-    }, 10);
-}
-
-function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.querySelector('div').classList.remove('scale-100', 'opacity-100');
-        modal.querySelector('div').classList.add('scale-95', 'opacity-0');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            if (modalId === 'user-options-modal') state.selectedUser = null;
-        }, 300);
+    // If we are showing the rooms screen, fetch and render the rooms.
+    if (screenId === 'rooms-screen') {
+        fetchAndDisplayRooms();
+        connectSocket(); // Connect socket when entering rooms screen
+    } else {
+        // Disconnect socket if we leave the rooms area
+        if (state.socket) {
+            state.socket.disconnect();
+            state.socket = null;
+        }
     }
 }
 
 function saveSession(data) {
-    state.currentUser = data.user || { _id: data._id, username: data.username, profilePicture: data.profilePicture };
+    state.currentUser = { _id: data._id, username: data.username };
     state.token = data.token;
     localStorage.setItem('airchat_session', JSON.stringify({ currentUser: state.currentUser, token: state.token }));
 }
@@ -115,75 +73,186 @@ function loadSession() {
 }
 
 function logout() {
-    // ... (same as before)
+    localStorage.removeItem('airchat_session');
+    state.currentUser = null;
+    state.token = null;
+    showScreen('home-screen');
 }
 
 // =================================================================================
 // API Interaction & Rendering
 // =================================================================================
 
-async function fetchAndRenderRooms() { /* ... same as before ... */ }
-function renderProfile() { /* ... same as before ... */ }
-async function handleProfilePictureUpload(event) { /* ... same as before ... */ }
-function showChatRoom(room) { /* ... same as before ... */ }
-function appendMessage(msg) { /* ... same as before ... */ }
+function addRoomToList(room) {
+    const roomElement = document.createElement('div');
+    roomElement.className = "p-5 bg-gray-100 dark:bg-gray-700 rounded-xl shadow-md cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center justify-between";
+    roomElement.innerHTML = `
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xl font-bold">
+                ${room.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+                <h3 class="font-semibold text-lg">${room.name}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Owner: ${room.owner.username}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+            <i class="fas fa-users"></i>
+            <span>${room.participants.length}</span>
+        </div>
+    `;
+    // roomElement.onclick = () => showChatRoom(room); // Future functionality
+    elements.roomsListContainer.appendChild(roomElement);
+}
 
-// =================================================================================
-// Gemini AI Integration
-// =================================================================================
-async function sendToGemini() {
-    const prompt = elements.messageInput.value.trim();
-    if (prompt === '' || !state.token) return;
-
-    appendMessage({ text: prompt, username: state.currentUser.username });
-    elements.messageInput.value = '';
-
-    const loadingId = `loading-${Date.now()}`;
-    appendMessage({ text: 'جاري التفكير...', username: 'مساعد Gemini ✨', id: loadingId, isGemini: true });
-
+async function fetchAndDisplayRooms() {
+    if (!state.token) return;
     try {
-        const res = await fetch('/api/gemini/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
-            body: JSON.stringify({ prompt, history: state.chatHistory }),
+        const res = await fetch('/api/rooms', {
+            headers: { 'Authorization': `Bearer ${state.token}` }
         });
-        if (!res.ok) throw new Error((await res.json()).message || 'Failed to get response');
+        if (!res.ok) throw new Error('Failed to fetch rooms');
 
-        const data = await res.json();
-        const responseText = data.response;
+        const rooms = await res.json();
+        state.rooms = rooms;
 
-        const loadingElement = document.getElementById(loadingId);
-        if (loadingElement) loadingElement.parentElement.innerHTML = createMessageHTML({ text: responseText, username: 'مساعد Gemini ✨', isGemini: true });
-
-        state.chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-        state.chatHistory.push({ role: "model", parts: [{ text: responseText }] });
+        elements.roomsListContainer.innerHTML = ''; // Clear existing list
+        if (rooms.length === 0) {
+            elements.roomsListContainer.innerHTML = `<p class="text-center text-gray-500">No rooms available. Create one to start chatting!</p>`;
+        } else {
+            rooms.forEach(addRoomToList);
+        }
     } catch (error) {
-        const loadingElement = document.getElementById(loadingId);
-        if (loadingElement) loadingElement.parentElement.remove();
-        showMessage(`Gemini Error: ${error.message}`, true);
+        console.error(error);
+        // showMessage('Could not load rooms.', true);
     }
 }
 
+async function handleCreateRoom(event) {
+    event.preventDefault();
+    const roomName = elements.createRoomNameInput.value.trim();
+    if (!roomName || !state.token) return;
+
+    try {
+        const res = await fetch('/api/rooms', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            },
+            body: JSON.stringify({ name: roomName })
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Failed to create room');
+        }
+
+        // The room will be added via the socket event, so we don't need to do anything here
+        // except clear the input.
+        elements.createRoomNameInput.value = '';
+
+    } catch (error) {
+        console.error(error);
+        // showMessage(error.message, true);
+    }
+}
 
 // =================================================================================
-// Moderation & User Interaction
+// WebSocket Logic
 // =================================================================================
-function showUserOptions(username, userId) { /* ... same as before ... */ }
-function kickUser() { /* ... same as before ... */ }
+function connectSocket() {
+    if (state.socket || !state.token) return;
 
-// =================================================================================
-// WebRTC & WebSocket Logic
-// =================================================================================
-function connectToChat() { /* ... same as before, including 'kicked' listener ... */ }
-function sendMessage() { /* ... same as before ... */ }
-// ... All WebRTC handlers ...
+    state.socket = io({
+        auth: { token: state.token }
+    });
+
+    state.socket.on('connect', () => {
+        console.log('Socket connected:', state.socket.id);
+        // Register user ID with socket for signaling
+        if (state.currentUser) {
+            state.socket.emit('register-socket', state.currentUser._id);
+        }
+    });
+
+    state.socket.on('room_created', (newRoom) => {
+        console.log('New room created event received:', newRoom);
+        // Add the new room to the list without a full refresh
+        addRoomToList(newRoom);
+    });
+
+    state.socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+    });
+}
+
 
 // =================================================================================
 // Event Listeners & Initialization
 // =================================================================================
-function setupEventListeners() {
-    // ... all listeners including geminiBtn
-    elements.geminiBtn.addEventListener('click', sendToGemini);
+
+async function handleLogin(event) {
+    event.preventDefault();
+    const username = elements.loginForm.elements['login-username'].value;
+    const password = elements.loginForm.elements['login-password'].value;
+
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        saveSession(data);
+        showScreen('rooms-screen');
+    } catch (error) {
+        console.error('Login failed:', error);
+        // showMessage(error.message, true);
+    }
 }
-function init() { /* ... same as before ... */ }
+
+async function handleSignup(event) {
+    event.preventDefault();
+    const username = elements.signupForm.elements['signup-username'].value;
+    const password = elements.signupForm.elements['signup-password'].value;
+    // You might want to add confirm password validation here
+
+    try {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        saveSession(data);
+        showScreen('rooms-screen');
+    } catch (error) {
+        console.error('Signup failed:', error);
+        // showMessage(error.message, true);
+    }
+}
+
+
+function setupEventListeners() {
+    elements.loginForm.addEventListener('submit', handleLogin);
+    elements.signupForm.addEventListener('submit', handleSignup);
+    elements.createRoomForm.addEventListener('submit', handleCreateRoom);
+    elements.logoutBtn.addEventListener('click', logout);
+    // ... other event listeners
+}
+
+function init() {
+    if (loadSession()) {
+        showScreen('rooms-screen');
+    } else {
+        showScreen('home-screen');
+    }
+    setupEventListeners();
+}
+
 init();
