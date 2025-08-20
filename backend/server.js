@@ -16,6 +16,7 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || `http://localhost:${PORT}`;
 const authRoutes = require('./routes/authRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const profileRoutes = require('./routes/profileRoutes');
+const conversationRoutes = require('./routes/conversationRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -52,6 +53,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/conversations', conversationRoutes);
 app.use('/api/gemini', require('./routes/geminiRoutes'));
 
 const socketHandler = require('./socket/socketHandler');
