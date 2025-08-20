@@ -1,5 +1,6 @@
 const Room = require('../models/Room');
 const User = require('../models/User');
+const Message = require('../models/Message'); // Import Message model
 const jwt = require('jsonwebtoken');
 
 // In-memory mapping of userId to socketId for signaling
@@ -63,24 +64,40 @@ const socketHandler = (io) => {
                 if (room) {
                     socket.to(roomId).emit('user_joined', { username: socket.user.username });
                     io.to(roomId).emit('update_participants', room.participants);
+
+                    // Fetch last 50 messages and send to the joining user
+                    const history = await Message.find({ room: roomId })
+                        .sort({ createdAt: -1 })
+                        .limit(50)
+                        .populate('sender', 'username profilePicture');
+
+                    socket.emit('message_history', history.reverse());
                 }
             } catch (error) {
                 console.error(`Error in joinRoom event for room ${roomId}:`, error);
             }
         });
 
-        socket.on('chatMessage', ({ room, text }) => {
-            // Construct the message object on the server to prevent spoofing
-            const message = {
-                text: text,
-                sender: {
-                    _id: socket.user._id,
-                    username: socket.user.username,
-                    profilePicture: socket.user.profilePicture
-                }
-            };
-            // Broadcast the message to the room
-            io.to(room).emit('message', message);
+        socket.on('chatMessage', async ({ room, text }) => {
+            try {
+                // Create the message object
+                const messageData = {
+                    text: text,
+                    sender: socket.user._id,
+                    room: room,
+                };
+
+                // Save the message to the database
+                const message = await Message.create(messageData);
+
+                // Populate sender info for broadcasting
+                const populatedMessage = await Message.findById(message._id).populate('sender', 'username profilePicture');
+
+                // Broadcast the populated message to the room
+                io.to(room).emit('message', populatedMessage);
+            } catch (error) {
+                console.error(`Error saving or broadcasting message for room ${room}:`, error);
+            }
         });
 
         // --- WebRTC Signaling Events (Refactored) ---
