@@ -53,12 +53,14 @@ const socketHandler = require('./socket/socketHandler');
 // Handle Socket.IO connections
 socketHandler(io);
 
-// Serve frontend
-const frontendPath = path.resolve(__dirname, '../frontend');
-app.use(express.static(frontendPath));
+// Serve frontend files from the root directory
+const rootPath = path.resolve(__dirname, '..');
+app.use(express.static(rootPath));
 
+// For any GET request that doesn't start with /api, serve index.html
+// This is for single-page application (SPA) routing
 app.get(/^(?!\/api).*/, (req, res) => {
-    res.sendFile(path.resolve(frontendPath, 'index.html'));
+    res.sendFile(path.resolve(rootPath, 'index.html'));
 });
 
 // Custom error handler middleware
