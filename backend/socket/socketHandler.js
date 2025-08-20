@@ -100,6 +100,28 @@ const socketHandler = (io) => {
             }
         });
 
+        socket.on('private_message', async ({ conversationId, text }) => {
+            try {
+                const messageData = { text, sender: socket.user._id, conversation: conversationId };
+                const message = await Message.create(messageData);
+                const populatedMessage = await Message.findById(message._id).populate('sender', 'username profilePicture');
+
+                const conversation = await Conversation.findById(conversationId);
+                if(conversation) {
+                    conversation.participants.forEach(participantId => {
+                        const participantSocketId = userSockets[participantId.toString()];
+                        if(participantSocketId) {
+                            io.to(participantSocketId).emit('private_message', populatedMessage);
+                        }
+                    });
+                    conversation.lastMessage = message._id;
+                    await conversation.save();
+                }
+            } catch (error) {
+                console.error('Error handling private message:', error);
+            }
+        });
+
         // --- WebRTC Signaling Events (Refactored) ---
         socket.on('voice-offer', (data) => relayToUser(io, socket, 'voice-offer', data));
         socket.on('voice-answer', (data) => relayToUser(io, socket, 'voice-answer', data));
