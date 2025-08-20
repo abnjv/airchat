@@ -1,7 +1,29 @@
 const Room = require('../models/Room');
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 // In-memory mapping of userId to socketId for signaling
 const userSockets = {};
+
+// Middleware for Socket.IO authentication
+const socketAuthMiddleware = async (socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (!token) {
+        return next(new Error('Authentication error: No token provided.'));
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id).select('-password');
+        if (!user) {
+            return next(new Error('Authentication error: User not found.'));
+        }
+        socket.user = user; // Attach user to the socket object
+        next();
+    } catch (err) {
+        return next(new Error('Authentication error: Invalid token.'));
+    }
+};
+
 
 // Helper function to relay signaling messages
 const relayToUser = (io, socket, event, { toUserId, ...payload }) => {
@@ -10,7 +32,6 @@ const relayToUser = (io, socket, event, { toUserId, ...payload }) => {
         console.log(`Relaying event '${event}' to user ${toUserId}`);
         io.to(toSocketId).emit(event, payload);
     } else {
-        // Optional: notify sender that user is not available
         socket.emit('user-unavailable', { userId: toUserId });
         console.log(`Could not find socket for user ${toUserId} to relay event '${event}'`);
     }
@@ -18,21 +39,47 @@ const relayToUser = (io, socket, event, { toUserId, ...payload }) => {
 
 
 const socketHandler = (io) => {
+    io.use(socketAuthMiddleware); // Apply authentication middleware
+
     io.on('connection', (socket) => {
-        console.log(`New user connected: ${socket.id}`);
+        console.log(`Authenticated user connected: ${socket.user.username} (${socket.id})`);
 
         socket.on('register-socket', (userId) => {
             userSockets[userId] = socket.id;
             console.log(`Registered socket for user ${userId}`);
         });
 
-        socket.on('joinRoom', ({ username, room }) => {
-            socket.join(room);
-            console.log(`${username} (${socket.id}) joined room: ${room}`);
-            socket.to(room).emit('message', `${username} has joined the room`);
+        socket.on('joinRoom', async ({ username, room: roomId }) => {
+            try {
+                socket.join(roomId);
+                console.log(`${username} (${socket.id}) joined room: ${roomId}`);
+
+                const room = await Room.findByIdAndUpdate(
+                    roomId,
+                    { $addToSet: { participants: socket.user.id } },
+                    { new: true }
+                ).populate('participants', 'username profilePicture');
+
+                if (room) {
+                    socket.to(roomId).emit('user_joined', { username: socket.user.username });
+                    io.to(roomId).emit('update_participants', room.participants);
+                }
+            } catch (error) {
+                console.error(`Error in joinRoom event for room ${roomId}:`, error);
+            }
         });
 
-        socket.on('chatMessage', ({ room, message }) => {
+        socket.on('chatMessage', ({ room, text }) => {
+            // Construct the message object on the server to prevent spoofing
+            const message = {
+                text: text,
+                sender: {
+                    _id: socket.user._id,
+                    username: socket.user.username,
+                    profilePicture: socket.user.profilePicture
+                }
+            };
+            // Broadcast the message to the room
             io.to(room).emit('message', message);
         });
 
@@ -45,12 +92,9 @@ const socketHandler = (io) => {
         socket.on('kick-user', async ({ roomId, userIdToKick, requestingUserId }) => {
             try {
                 const room = await Room.findById(roomId);
-
-                // Check if the requesting user is the owner
                 if (room && room.owner.toString() === requestingUserId) {
                     const socketIdToKick = userSockets[userIdToKick];
                     if (socketIdToKick) {
-                        // Have the user leave the socket.io room and notify them
                         io.to(socketIdToKick).emit('kicked', { roomName: room.name });
                         const socketToKick = io.sockets.sockets.get(socketIdToKick);
                         if (socketToKick) {
@@ -59,7 +103,6 @@ const socketHandler = (io) => {
                         io.to(roomId).emit('message', `A user has been kicked from the room.`);
                     }
                 } else {
-                    // Notify requester that they don't have permission
                     socket.emit('permission-denied', { message: "You do not have permission to kick users from this room." });
                 }
             } catch (error) {
@@ -68,8 +111,25 @@ const socketHandler = (io) => {
             }
         });
 
-        socket.on('disconnect', () => {
-            // Clean up user from mapping on disconnect
+        socket.on('disconnect', async () => {
+            console.log(`User disconnected: ${socket.user.username} (${socket.id})`);
+
+            // Find rooms this user was a participant in
+            const rooms = await Room.find({ participants: socket.user._id });
+
+            for (const room of rooms) {
+                // Remove user from room's participant list
+                room.participants.pull(socket.user._id);
+                await room.save();
+
+                // Get the updated participant list
+                const updatedRoom = await Room.findById(room._id).populate('participants', 'username profilePicture');
+
+                // Notify remaining users in the room
+                io.to(room._id.toString()).emit('update_participants', updatedRoom.participants);
+            }
+
+            // Clean up user from signaling map
             for (const userId in userSockets) {
                 if (userSockets[userId] === socket.id) {
                     delete userSockets[userId];
@@ -77,7 +137,6 @@ const socketHandler = (io) => {
                     break;
                 }
             }
-            console.log(`User disconnected: ${socket.id}`);
         });
     });
 };
