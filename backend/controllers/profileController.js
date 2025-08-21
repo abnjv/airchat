@@ -1,5 +1,5 @@
-const User = require('../models/User');
 const asyncHandler = require('../middleware/asyncHandler');
+const User = require('../models/User');
 
 // @desc    Get user profile
 // @route   GET /api/profile/:userId
@@ -14,31 +14,49 @@ const getUserProfile = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Update user profile picture
-// @route   PUT /api/profile/picture
+// @desc    Update user profile (bio, etc.)
+// @route   PUT /api/profile
 // @access  Private
-const updateUserProfilePicture = asyncHandler(async (req, res) => {
-    // In a real application, this would handle a file upload.
-    // For now, we'll accept a URL from the request body.
-    const { imageUrl } = req.body;
-
-    if (!imageUrl) {
-        res.status(400);
-        throw new Error('Image URL is required');
-    }
-
+const updateUserProfile = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user.id);
 
     if (user) {
-        user.profilePicture = imageUrl;
+        user.bio = req.body.bio || user.bio;
+        // Add other fields to update here in the future
+
         const updatedUser = await user.save();
+
         res.json({
             _id: updatedUser._id,
             username: updatedUser.username,
             profilePicture: updatedUser.profilePicture,
+            bio: updatedUser.bio,
         });
     } else {
-        // This case is unlikely if the user is authenticated via protect middleware
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+
+// @desc    Upload new profile picture
+// @route   POST /api/profile/upload
+// @access  Private
+const uploadProfilePicture = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user.id);
+
+    if (user) {
+        // The path to the uploaded file is available in req.file.path
+        // Note: In a real production app, you'd want to handle removing the old picture
+        // and also serve the 'uploads' directory statically.
+        user.profilePicture = `/${req.file.path}`;
+        const updatedUser = await user.save();
+
+        res.json({
+            message: 'Image uploaded successfully',
+            profilePicture: updatedUser.profilePicture,
+        });
+    } else {
         res.status(404);
         throw new Error('User not found');
     }
@@ -46,5 +64,6 @@ const updateUserProfilePicture = asyncHandler(async (req, res) => {
 
 module.exports = {
     getUserProfile,
-    updateUserProfilePicture,
+    updateUserProfile,
+    uploadProfilePicture,
 };
