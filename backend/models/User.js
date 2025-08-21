@@ -5,7 +5,8 @@ const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, unique: true, sparse: true, default: null },
     password: { type: String, required: true },
-    profilePicture: { type: String, default: 'https://placehold.co/128x128/3b82f6/ffffff?text=U' }
+    profilePicture: { type: String, default: 'https://placehold.co/128x128/3b82f6/ffffff?text=U' },
+    bio: { type: String, default: 'No bio yet...', maxLength: 150 }
 }, { timestamps: true });
 
 // دالة لفحص كلمة المرور عند تسجيل الدخول

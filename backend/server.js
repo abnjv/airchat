@@ -61,6 +61,9 @@ const socketHandler = require('./socket/socketHandler');
 // Handle Socket.IO connections
 socketHandler(io);
 
+// Serve static assets from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Serve frontend files from the root directory
 const rootPath = path.resolve(__dirname, '..');
 app.use(express.static(rootPath));
