@@ -1,16 +1,26 @@
-import { saveSession } from './main.js'; // This will need to be restructured
-import { showScreen } from './ui.js';
+import { saveSession } from './session.js';
+import { showScreen, showMessage } from './ui.js';
+import { elements } from './main.js'; // Import elements for potential use
 
 export async function loginUser(username, password) {
-    // ... fetch logic from handleLogin
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        saveSession(data);
+        showScreen('rooms-screen');
+    } catch (error) {
+        showMessage(`Login Failed: ${error.message}`, true);
+        console.error('Login failed:', error);
+    }
 }
 
 export async function signupUser(username, password) {
-    // ... fetch logic from handleSignup
+    // ... similar to loginUser
 }
 
-export async function fetchRooms(token) {
-    // ... fetch logic from fetchAndDisplayRooms
-}
-
-// ... and so on for all API calls
+// ... all other API functions
