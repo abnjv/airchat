@@ -64,15 +64,22 @@ socketHandler(io);
 // Serve static assets from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Serve frontend files from the root directory
-const rootPath = path.resolve(__dirname, '..');
-app.use(express.static(rootPath));
+if (process.env.NODE_ENV === 'production') {
+    // In production, serve the built frontend assets
+    const buildPath = path.resolve(__dirname, '../dist');
+    app.use(express.static(buildPath));
 
-// For any GET request that doesn't start with /api, serve index.html
-// This is for single-page application (SPA) routing
-app.get(/^(?!\/api).*/, (req, res) => {
-    res.sendFile(path.resolve(rootPath, 'index.html'));
-});
+    // For any other request, serve the index.html
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(buildPath, 'index.html'));
+    });
+} else {
+    // In development, the Vite server handles the frontend
+    // We can add a simple message for the root path
+    app.get('/', (req, res) => {
+        res.send('API is running... (Vite dev server should be used for frontend)');
+    });
+}
 
 // Custom error handler middleware
 app.use((err, req, res, next) => {

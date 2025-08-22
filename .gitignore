@@ -13,5 +13,5 @@ yarn-error.log*
 .log
 
 # Build output
-dist/
-build/
+/dist/
+/build/
